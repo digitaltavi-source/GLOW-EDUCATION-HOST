@@ -1,0 +1,14 @@
+{
+  "request_id": "demo-001",
+  "operation": "create_learning_experience",
+  "role": "teacher",
+  "locale": "vi-VN",
+  "input": {
+    "goal": "Tạo trải nghiệm học tập AI hoàn chỉnh cho một bài học",
+    "audience": "học sinh",
+    "constraints": [
+      "ưu tiên tương tác",
+      "chỉ tạo công cụ/phương tiện khi thực sự cần"
+    ]
+  }
+}
