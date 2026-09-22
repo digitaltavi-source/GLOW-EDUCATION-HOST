@@ -18,6 +18,7 @@ export const PublicError = z.object({
 export const LearningResponse = z.object({
   request_id: z.string(),
   status: z.enum(["accepted","completed","blocked","degraded","failed"]),
+  exposure: z.enum(["PUBLIC_DECLASSIFIED","MODEL_SESSION_PRIVATE"]).default("PUBLIC_DECLASSIFIED"),
   result: z.record(z.string(), z.unknown()).nullable().optional(),
   public_evidence: z.array(z.record(z.string(), z.unknown())).default([]),
   errors: z.array(PublicError).default([])
