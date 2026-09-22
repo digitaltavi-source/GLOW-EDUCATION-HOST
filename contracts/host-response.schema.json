@@ -6,7 +6,8 @@
   "additionalProperties": false,
   "required": [
     "request_id",
-    "status"
+    "status",
+    "exposure"
   ],
   "properties": {
     "request_id": {
@@ -57,6 +58,14 @@
         "additionalProperties": false
       },
       "default": []
+    },
+    "exposure": {
+      "type": "string",
+      "enum": [
+        "PUBLIC_DECLASSIFIED",
+        "MODEL_SESSION_PRIVATE"
+      ],
+      "default": "PUBLIC_DECLASSIFIED"
     }
   }
 }
