@@ -9,12 +9,15 @@
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
-    "express": "^5.1.0",
-    "zod": "^3.25.76"
+    "@modelcontextprotocol/server": "2.0.0",
+    "@modelcontextprotocol/express": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "express": "^5.2.1",
+    "jose": "^6.1.3",
+    "zod": "^4.2.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
