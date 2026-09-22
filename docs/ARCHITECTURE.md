@@ -7,17 +7,17 @@ ChatGPT
 GLOW Education Host
   |
   v
-Protected Gateway Contract
+Protected Service Boundary
   |
   v
-Private Education Factory
+Private Backend
 ```
 
 The public host owns only host adaptation and declassified transport.
 
 It does not own:
-- factory flow;
-- capability selection;
+- private production flow;
+- backend decision logic;
 - private release state;
 - qualification state;
 - internal assurance decisions.
