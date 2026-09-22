@@ -30,6 +30,27 @@ test("accepts only public response schema", async () => {
   assert.equal(out.status, "completed");
 });
 
+
+test("accepts authenticated model-session private work response shape", async () => {
+  const fakeFetch = async () => new Response(JSON.stringify({
+    request_id: "r1",
+    status: "accepted",
+    exposure: "MODEL_SESSION_PRIVATE",
+    result: {
+      mission_id: "M-test",
+      state: "H1_WORKING",
+      stage: "H1",
+      work: { kind: "CAPABILITY_SCREENING", work_token: "opaque" }
+    },
+    public_evidence: [],
+    errors: []
+  }), { status: 200, headers: { "content-type": "application/json" } });
+
+  const out = await callProtectedService(config, "user-1", request, fakeFetch as typeof fetch);
+  assert.equal(out.exposure, "MODEL_SESSION_PRIVATE");
+  assert.equal(out.status, "accepted");
+});
+
 test("rejects extra protected fields at declassification boundary", async () => {
   const fakeFetch = async () => new Response(JSON.stringify({
     request_id: "r1",
