@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { OAuthTokenVerifier } from "@modelcontextprotocol/express";
 import type { AuthInfo } from "@modelcontextprotocol/server";
@@ -7,6 +8,11 @@ export type OAuthConfig = {
   issuer: string;
   audience: string;
   jwksUrl: string;
+};
+
+export type StaticBearerConfig = {
+  token: string;
+  subject: string;
 };
 
 export function loadOAuthConfig(env = process.env): OAuthConfig {
@@ -19,6 +25,34 @@ export function loadOAuthConfig(env = process.env): OAuthConfig {
   if (!jwksUrl) throw new Error("CONFIG_OAUTH_JWKS_URL_REQUIRED");
 
   return { issuer, audience, jwksUrl };
+}
+
+export function loadStaticBearerConfig(env = process.env): StaticBearerConfig {
+  const token = env.GLOW_PUBLIC_TEST_BEARER_TOKEN?.trim();
+  const subject = env.GLOW_PUBLIC_TEST_SUBJECT?.trim() || "hostinger-r3-test-user";
+  if (!token) throw new Error("CONFIG_PUBLIC_TEST_BEARER_TOKEN_REQUIRED");
+  if (token.length < 32) throw new Error("CONFIG_PUBLIC_TEST_BEARER_TOKEN_TOO_SHORT");
+  return { token, subject };
+}
+
+export function createStaticBearerVerifier(config: StaticBearerConfig): OAuthTokenVerifier {
+  return {
+    async verifyAccessToken(token: string): Promise<AuthInfo> {
+      const expected = Buffer.from(config.token);
+      const got = Buffer.from(token);
+      const ok = expected.length === got.length && timingSafeEqual(expected, got);
+      if (!ok) {
+        throw new OAuthError(OAuthErrorCode.InvalidToken, "invalid static bearer token");
+      }
+      return {
+        token,
+        clientId: "glow-hostinger-r3-test",
+        scopes: ["education.run"],
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+        extra: { sub: config.subject }
+      };
+    }
+  };
 }
 
 export function createJwtVerifier(config: OAuthConfig): OAuthTokenVerifier {
