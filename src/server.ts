@@ -9,12 +9,14 @@ import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStati
 import { callProtectedService, checkProtectedReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
+import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 
 const config = loadConfig();
 const authMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
+const oauthConfig = authMode === "static_bearer" ? null : loadOAuthConfig();
 const verifier = authMode === "static_bearer"
   ? createStaticBearerVerifier(loadStaticBearerConfig())
-  : createJwtVerifier(loadOAuthConfig());
+  : createJwtVerifier(oauthConfig!);
 
 function toolResult(value: Record<string, unknown>) {
   return {
@@ -242,12 +244,24 @@ const app = createMcpExpressApp({
 });
 
 const mcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
+const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(mcpServerUrl);
+const resourceMetadata = buildProtectedResourceMetadata({
+  resource:mcpServerUrl.toString(),
+  authMode,
+  oauthIssuer:oauthConfig?.issuer,
+  scopes:["education.run"]
+});
 const auth = requireBearerAuth({
   verifier,
   requiredScopes: ["education.run"],
-  resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl)
+  resourceMetadataUrl
 });
 const node = toNodeHandler(handler);
+
+const resourceMetadataPath = new URL(resourceMetadataUrl).pathname;
+app.get(resourceMetadataPath, (_req,res) => {
+  res.json(resourceMetadata);
+});
 
 app.get("/healthz", (_req,res) => {
   res.json({ok:true,product:"GLOW Education",version:"0.1.0-candidate",mode:"CHATGPT_WORK_LOOP"});
