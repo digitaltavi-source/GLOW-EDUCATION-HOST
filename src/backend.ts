@@ -31,3 +31,28 @@ export async function callProtectedService(
 
   return parsed.data;
 }
+
+
+export async function checkProtectedReadiness(
+  config: HostConfig,
+  fetchImpl: typeof fetch = fetch
+): Promise<{ ok: boolean; protected_service_authenticated: boolean; code: string }> {
+  const probe: LearningRequestType = {
+    request_id: "r3-readiness-probe-v1",
+    operation: "get_status",
+    role: "unspecified",
+    locale: "vi-VN",
+    input: { mission_id: "M-R3-READINESS-NONEXISTENT" }
+  };
+  try {
+    const out = await callProtectedService(config, "r3-readiness-probe", probe, fetchImpl);
+    const code = out.errors?.[0]?.code ?? "";
+    if (out.status === "failed" && code === "MISSION_NOT_FOUND") {
+      return { ok: true, protected_service_authenticated: true, code: "PROTECTED_FACTORY_REACHABLE" };
+    }
+    return { ok: false, protected_service_authenticated: true, code: "PROTECTED_FACTORY_UNEXPECTED_RESPONSE" };
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "PROTECTED_FACTORY_PROBE_FAILED";
+    return { ok: false, protected_service_authenticated: false, code };
+  }
+}
