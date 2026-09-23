@@ -8,6 +8,7 @@ import { loadConfig } from "./config.js";
 import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier } from "./oauth.js";
 import { callProtectedService, checkProtectedReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
+import { classifyWorkResponse } from "./work-response.js";
 
 const config = loadConfig();
 const authMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
@@ -113,7 +114,13 @@ const buildServer: McpServerFactory = ctx => {
     async ({mission_id,role,locale}) => {
       try {
         const out=await invoke(ctx,"get_work",role,locale,{mission_id});
-        if(out.exposure!=="MODEL_SESSION_PRIVATE") throw new Error("WORK_EXPOSURE_INVALID");
+        const classification=classifyWorkResponse(out);
+        if(classification==="SAFE_PUBLIC_FAILURE"){
+          return {
+            isError:true,
+            ...toolResult(out as unknown as Record<string,unknown>)
+          };
+        }
         return toolResult(out as unknown as Record<string,unknown>);
       } catch(error){ return toolError(error instanceof Error?error.message:"HOST_REQUEST_FAILED"); }
     }
