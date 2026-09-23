@@ -6,7 +6,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
 import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier } from "./oauth.js";
-import { callProtectedService } from "./backend.js";
+import { callProtectedService, checkProtectedReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 
 const config = loadConfig();
@@ -244,6 +244,17 @@ const node = toNodeHandler(handler);
 
 app.get("/healthz", (_req,res) => {
   res.json({ok:true,product:"GLOW Education",version:"0.1.0-candidate",mode:"CHATGPT_WORK_LOOP"});
+});
+
+app.get("/readyz", async (_req,res) => {
+  const readiness = await checkProtectedReadiness(config);
+  res.status(readiness.ok ? 200 : 503).json({
+    ok: readiness.ok,
+    product: "GLOW Education",
+    public_host: "running",
+    protected_factory: readiness.ok ? "reachable_authenticated" : "unavailable",
+    code: readiness.code
+  });
 });
 
 app.all("/mcp",auth,(req,res)=>void node(req,res,req.body));
