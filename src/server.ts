@@ -5,12 +5,15 @@ import type { McpServerFactory } from "@modelcontextprotocol/server";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
-import { loadOAuthConfig, createJwtVerifier } from "./oauth.js";
+import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier } from "./oauth.js";
 import { callProtectedService } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 
 const config = loadConfig();
-const oauth = loadOAuthConfig();
+const authMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
+const verifier = authMode === "static_bearer"
+  ? createStaticBearerVerifier(loadStaticBearerConfig())
+  : createJwtVerifier(loadOAuthConfig());
 
 function toolResult(value: Record<string, unknown>) {
   return {
@@ -233,7 +236,7 @@ const app = createMcpExpressApp({
 
 const mcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
 const auth = requireBearerAuth({
-  verifier: createJwtVerifier(oauth),
+  verifier,
   requiredScopes: ["education.run"],
   resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl)
 });
