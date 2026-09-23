@@ -14,6 +14,10 @@ import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 const config = loadConfig();
 const authMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
 const oauthConfig = authMode === "static_bearer" ? null : loadOAuthConfig();
+const requiredScopes = authMode === "static_bearer"
+  ? ["education.run"]
+  : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "openid email")
+      .split(/\s+/).map(v=>v.trim()).filter(Boolean);
 const verifier = authMode === "static_bearer"
   ? createStaticBearerVerifier(loadStaticBearerConfig())
   : createJwtVerifier(oauthConfig!);
@@ -41,7 +45,7 @@ function subjectFrom(ctx: { authInfo?: { scopes: string[]; extra?: Record<string
   const authInfo = ctx.authInfo;
   const subject = authInfo?.extra?.["sub"];
   if (typeof subject !== "string" || !subject) throw new Error("AUTH_REQUIRED");
-  if (!authInfo.scopes.includes("education.run")) throw new Error("SCOPE_REQUIRED");
+  if (!requiredScopes.every(scope=>authInfo.scopes.includes(scope))) throw new Error("SCOPE_REQUIRED");
   return subject;
 }
 
@@ -249,11 +253,11 @@ const resourceMetadata = buildProtectedResourceMetadata({
   resource:mcpServerUrl.toString(),
   authMode,
   oauthIssuer:oauthConfig?.issuer,
-  scopes:["education.run"]
+  scopes:requiredScopes
 });
 const auth = requireBearerAuth({
   verifier,
-  requiredScopes: ["education.run"],
+  requiredScopes,
   resourceMetadataUrl
 });
 const node = toNodeHandler(handler);
