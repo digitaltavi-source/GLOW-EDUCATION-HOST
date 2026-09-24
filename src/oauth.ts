@@ -102,3 +102,25 @@ export function createJwtVerifier(config: OAuthConfig): OAuthTokenVerifier {
     }
   };
 }
+
+
+export function createHybridVerifier(args: {
+  staticConfig: StaticBearerConfig;
+  oauthConfig: OAuthConfig;
+  oauthScopes?: string[];
+}): OAuthTokenVerifier {
+  const staticVerifier=createStaticBearerVerifier(args.staticConfig);
+  const jwtVerifier=createJwtVerifier(args.oauthConfig);
+  const oauthScopes=args.oauthScopes?.length ? args.oauthScopes : ["openid","email"];
+
+  return {
+    async verifyAccessToken(token: string): Promise<AuthInfo> {
+      try {
+        const info=await staticVerifier.verifyAccessToken(token);
+        return {...info,scopes:[...new Set([...info.scopes,...oauthScopes])]};
+      } catch {}
+
+      return jwtVerifier.verifyAccessToken(token);
+    }
+  };
+}
