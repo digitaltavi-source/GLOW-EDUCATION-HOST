@@ -14,6 +14,8 @@ import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 
 const config = loadConfig();
+const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
+const publicAuthorizationServerBase = process.env.GLOW_PUBLIC_AUTHORIZATION_SERVER?.trim() || configuredMcpServerUrl.origin;
 const configuredAuthMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
 const authMode = configuredAuthMode === "static_bearer" ? "hybrid" : configuredAuthMode;
 const supabaseOAuthConfig = {
@@ -28,7 +30,7 @@ const oauthConfig = authMode === "oauth"
     : null;
 const requiredScopes = authMode === "legacy_static"
   ? ["education.run"]
-  : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "openid email")
+  : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "email")
       .split(/\s+/).map(v=>v.trim()).filter(Boolean);
 const verifier = authMode === "legacy_static"
   ? createStaticBearerVerifier(loadStaticBearerConfig())
@@ -283,12 +285,12 @@ const app = createMcpExpressApp({
   allowedHosts: (process.env.GLOW_ALLOWED_HOSTS ?? "localhost,127.0.0.1").split(",").map(v=>v.trim()).filter(Boolean)
 });
 
-const mcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
+const mcpServerUrl = configuredMcpServerUrl;
 const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(mcpServerUrl);
 const resourceMetadata = buildProtectedResourceMetadata({
   resource:mcpServerUrl.toString(),
   authMode,
-  oauthIssuer:oauthConfig?.issuer,
+  oauthIssuer:authMode === "legacy_static" ? null : publicAuthorizationServerBase,
   scopes:requiredScopes
 });
 const auth = requireBearerAuth({
@@ -301,6 +303,20 @@ const node = toNodeHandler(handler);
 const resourceMetadataPath = new URL(resourceMetadataUrl).pathname;
 app.get(resourceMetadataPath, (_req,res) => {
   res.json(resourceMetadata);
+});
+
+app.get("/.well-known/oauth-authorization-server", (_req,res) => {
+  res.json({
+    issuer: publicAuthorizationServerBase,
+    authorization_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/authorize",
+    token_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/token",
+    registration_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/clients/register",
+    scopes_supported: ["email","profile","openid"],
+    response_types_supported: ["code"],
+    grant_types_supported: ["authorization_code","refresh_token"],
+    token_endpoint_auth_methods_supported: ["none","client_secret_post","client_secret_basic"],
+    code_challenge_methods_supported: ["S256"]
+  });
 });
 
 const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../public");
