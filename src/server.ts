@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { createMcpExpressApp, getOAuthProtectedResourceMetadataUrl, requireBearerAuth } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { McpServerFactory } from "@modelcontextprotocol/server";
@@ -283,6 +285,55 @@ const node = toNodeHandler(handler);
 const resourceMetadataPath = new URL(resourceMetadataUrl).pathname;
 app.get(resourceMetadataPath, (_req,res) => {
   res.json(resourceMetadata);
+});
+
+const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../public");
+
+app.get("/oauth-client.js", (_req,res) => {
+  res.type("application/javascript");
+  res.sendFile(path.join(publicDir,"oauth-client.js"));
+});
+
+app.get("/oauth/consent", (_req,res) => {
+  res.type("html").send(`<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GLOW Education — Cấp quyền</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171717;background:#f6f7fb}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
+main{width:min(560px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+h1{font-size:24px;margin:0 0 8px}.muted{color:#666;line-height:1.55}.card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:18px 0}
+label{display:block;font-weight:600;margin:12px 0 6px}input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px}
+button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#eef2f7}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+#status{font-size:14px;margin-top:16px;color:#475569}#status[data-error="1"]{color:#b91c1c}code{word-break:break-all;font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>GLOW Education</h1>
+<p class="muted">ChatGPT đang yêu cầu quyền sử dụng GLOW Education thay mặt bạn. Hệ thống chỉ cấp quyền sau khi bạn xác nhận.</p>
+<section id="login-panel" class="card" hidden>
+<label for="email">Email</label>
+<input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+<div class="actions"><button id="signin" class="primary" type="button">Gửi liên kết đăng nhập</button></div>
+</section>
+<section id="consent-panel" class="card" hidden>
+<p><strong>Ứng dụng:</strong> <span id="client-name">ChatGPT</span></p>
+<p><strong>Quyền yêu cầu:</strong> <span id="scopes"></span></p>
+<p class="muted"><strong>Callback:</strong> <code id="redirect-uri"></code></p>
+<div class="actions">
+<button id="approve" class="primary" type="button">Cho phép</button>
+<button id="deny" class="secondary" type="button">Từ chối</button>
+</div>
+</section>
+<p id="status" aria-live="polite">Đang kiểm tra yêu cầu…</p>
+</main>
+<script src="/oauth-client.js"></script>
+</body>
+</html>`);
 });
 
 app.get("/healthz", (_req,res) => {
