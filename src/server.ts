@@ -82,6 +82,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "GLOW Education public profile",
       description: "Returns the public host status and current claim boundary.",
+      annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
       inputSchema: z.object({})
     },
     async () => toolResult({
@@ -96,6 +97,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Start a GLOW Education mission",
       description: "Creates a protected Factory mission. After this, call glow_get_factory_work.",
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         request_id: z.string().min(1).max(128).optional(),
@@ -115,6 +117,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Get the next bounded Factory work package",
       description: "Returns a MODEL_SESSION_PRIVATE work package for ChatGPT reasoning. Do not present private work-package internals to the user as public Factory output.",
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         mission_id: z.string().min(1).max(128),
@@ -142,6 +145,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Submit completed bounded Factory work",
       description: "Submits ChatGPT's result for the exact current work token. The Factory either returns the next work package or an approval gate.",
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         mission_id: z.string().min(1).max(128),
@@ -162,6 +166,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Approve or reject the exact Factory stage candidate",
       description: "Binds the user's decision to the exact candidate, assurance and freeze-input hashes returned by the Factory.",
+      annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         mission_id: z.string().min(1).max(128),
@@ -191,6 +196,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Get GLOW Education Factory mission status",
       description: "Returns declassified mission state and the next allowed action.",
+      annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         mission_id: z.string().min(1).max(128),
@@ -212,6 +218,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Get the final GLOW Education delivery",
       description: "Returns only the final PUBLIC_DECLASSIFIED delivery after H3 admission.",
+      annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         mission_id: z.string().min(1).max(128),
@@ -234,6 +241,7 @@ const buildServer: McpServerFactory = ctx => {
     {
       title: "Start a GLOW learning experience (compatibility alias)",
       description: "Starts a Factory mission; use the work-loop tools to continue it.",
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
       ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
       inputSchema: z.object({
         request_id: z.string().min(1).max(128).optional(),
