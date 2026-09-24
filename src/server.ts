@@ -7,23 +7,39 @@ import type { McpServerFactory } from "@modelcontextprotocol/server";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
-import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier } from "./oauth.js";
+import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier } from "./oauth.js";
 import { callProtectedService, checkProtectedReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 
 const config = loadConfig();
-const authMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
-const oauthConfig = authMode === "static_bearer" ? null : loadOAuthConfig();
-const requiredScopes = authMode === "static_bearer"
+const configuredAuthMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
+const authMode = configuredAuthMode === "static_bearer" ? "hybrid" : configuredAuthMode;
+const supabaseOAuthConfig = {
+  issuer: process.env.GLOW_OAUTH_ISSUER?.trim() || "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  audience: process.env.GLOW_OAUTH_AUDIENCE?.trim() || "authenticated",
+  jwksUrl: process.env.GLOW_OAUTH_JWKS_URL?.trim() || "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/.well-known/jwks.json"
+};
+const oauthConfig = authMode === "oauth"
+  ? loadOAuthConfig()
+  : authMode === "hybrid"
+    ? supabaseOAuthConfig
+    : null;
+const requiredScopes = authMode === "legacy_static"
   ? ["education.run"]
   : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "openid email")
       .split(/\s+/).map(v=>v.trim()).filter(Boolean);
-const verifier = authMode === "static_bearer"
+const verifier = authMode === "legacy_static"
   ? createStaticBearerVerifier(loadStaticBearerConfig())
-  : createJwtVerifier(oauthConfig!);
-const toolSecuritySchemes = authMode === "static_bearer"
+  : authMode === "hybrid"
+    ? createHybridVerifier({
+        staticConfig: loadStaticBearerConfig(),
+        oauthConfig: oauthConfig!,
+        oauthScopes: requiredScopes
+      })
+    : createJwtVerifier(oauthConfig!);
+const toolSecuritySchemes = authMode === "legacy_static"
   ? undefined
   : [{ type: "oauth2" as const, scopes: requiredScopes }];
 
