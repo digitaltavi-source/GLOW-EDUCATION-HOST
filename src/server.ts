@@ -369,6 +369,20 @@ const authV2 = requireBearerAuth({
   resourceMetadataUrl: resourceMetadataV2Url
 });
 
+const mcpV3ServerUrl = new URL("/mcp-v3", mcpServerUrl.origin);
+const resourceMetadataV3Url = getOAuthProtectedResourceMetadataUrl(mcpV3ServerUrl);
+const resourceMetadataV3 = buildProtectedResourceMetadata({
+  resource:mcpV3ServerUrl.toString(),
+  authMode,
+  oauthIssuer:authMode === "legacy_static" ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  scopes:requiredScopes
+});
+const authV3 = requireBearerAuth({
+  verifier,
+  requiredScopes,
+  resourceMetadataUrl: resourceMetadataV3Url
+});
+
 const node = toNodeHandler(handler);
 
 const resourceMetadataPath = new URL(resourceMetadataUrl).pathname;
@@ -379,6 +393,11 @@ app.get(resourceMetadataPath, (_req,res) => {
 const resourceMetadataV2Path = new URL(resourceMetadataV2Url).pathname;
 app.get(resourceMetadataV2Path, (_req,res) => {
   res.json(resourceMetadataV2);
+});
+
+const resourceMetadataV3Path = new URL(resourceMetadataV3Url).pathname;
+app.get(resourceMetadataV3Path, (_req,res) => {
+  res.json(resourceMetadataV3);
 });
 
 app.get("/.well-known/oauth-authorization-server", (_req,res) => {
@@ -461,6 +480,7 @@ app.get("/readyz", async (_req,res) => {
 
 app.all("/mcp",auth,(req,res)=>void node(req,res,req.body));
 app.all("/mcp-v2",authV2,(req,res)=>void node(req,res,req.body));
+app.all("/mcp-v3",authV3,(req,res)=>void node(req,res,req.body));
 
 app.listen(config.port,()=>{
   console.error(`GLOW Education public host listening on :${config.port}`);
