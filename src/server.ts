@@ -74,7 +74,7 @@ function subjectFrom(ctx: { authInfo?: { scopes: string[]; extra?: Record<string
 
 async function invoke(
   ctx: { authInfo?: { scopes: string[]; extra?: Record<string, unknown> } },
-  operation: "create_learning_experience"|"get_work"|"submit_work"|"inspect_blocked_stage"|"approve_stage"|"get_status"|"get_delivery",
+  operation: "create_learning_experience"|"get_work"|"submit_work"|"inspect_blocked_stage"|"recover_blocked_stage"|"approve_stage"|"get_status"|"get_delivery",
   role: "teacher"|"learner"|"parent"|"unspecified",
   locale: string,
   input: Record<string, unknown>,
@@ -176,6 +176,34 @@ const buildServer: McpServerFactory = ctx => {
     async ({mission_id,role,locale}) => {
       try {
         const out=await invoke(ctx,"inspect_blocked_stage",role,locale,{mission_id});
+        const classification=classifyWorkResponse(out);
+        if(classification==="SAFE_PUBLIC_FAILURE"){
+          return {
+            isError:true,
+            ...toolResult(out as unknown as Record<string,unknown>)
+          };
+        }
+        return toolResult(out as unknown as Record<string,unknown>);
+      } catch(error){ return toolError(error instanceof Error?error.message:"HOST_REQUEST_FAILED"); }
+    }
+  );
+
+  server.registerTool(
+    "glow_recover_blocked_factory_stage",
+    {
+      title: "Request bounded Factory recovery for a blocked stage",
+      description: "Requests one Factory-controlled recovery after an already-blocked stage and a verified runtime/contract repair. The Factory alone decides whether recovery is allowed. No work token, retry counter, approval, or recovery revision is accepted from the model.",
+      annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+      ...(toolSecuritySchemes ? { securitySchemes: toolSecuritySchemes } : {}),
+      inputSchema: z.object({
+        mission_id: z.string().min(1).max(128),
+        role: z.enum(["teacher","learner","parent","unspecified"]).default("unspecified"),
+        locale: z.string().min(2).max(32).default("vi-VN")
+      })
+    },
+    async ({mission_id,role,locale}) => {
+      try {
+        const out=await invoke(ctx,"recover_blocked_stage",role,locale,{mission_id});
         const classification=classifyWorkResponse(out);
         if(classification==="SAFE_PUBLIC_FAILURE"){
           return {
