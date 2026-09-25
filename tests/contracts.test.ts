@@ -6,6 +6,7 @@ const operations = [
   "create_learning_experience",
   "get_work",
   "submit_work",
+  "inspect_blocked_stage",
   "approve_stage",
   "get_status",
   "get_delivery"
