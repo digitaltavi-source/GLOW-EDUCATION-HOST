@@ -54,6 +54,47 @@ test("NORMAL: public host preserves ChatGPT work-loop exposure transitions", asy
   assert.deepEqual(seen,["create_learning_experience","get_work","submit_work","approve_stage","get_status","get_delivery"]);
 });
 
+test("RECOVERY: blocked-stage recovery stays Factory-controlled", async () => {
+  const mission="M-blocked";
+  const fakeFetch = async (_url: string|URL|Request, init?: RequestInit) => {
+    const body=JSON.parse(String(init?.body ?? "{}")) as LearningRequestType;
+    assert.equal(body.operation,"recover_blocked_stage");
+    assert.deepEqual(body.input,{mission_id:mission});
+    return new Response(JSON.stringify({
+      request_id:body.request_id,status:"accepted",exposure:"MODEL_SESSION_PRIVATE",
+      result:{mission_id:mission,state:"H2_WORKING",stage:"H2",work:{
+        kind:"STAGE_SYNTHESIS_FACTORY_REPAIR",work_token:"opaque",
+        payload:{work_contract_revision:"fixture-v6"},
+        result_contract:{work_contract_revision:"fixture-v6"},
+        claim_limit:"fixture"
+      }},
+      public_evidence:[],errors:[]
+    }),{status:200});
+  };
+  const recovered=await callProtectedService(
+    config,"user-1",req("recover_blocked_stage","r-recover",{mission_id:mission}),fakeFetch as typeof fetch
+  );
+  assert.equal(recovered.exposure,"MODEL_SESSION_PRIVATE");
+  assert.equal(recovered.result?.["state"],"H2_WORKING");
+});
+
+test("RECOVERY: Factory denial remains public and non-retryable", async () => {
+  const fakeFetch = async (_url: string|URL|Request, init?: RequestInit) => {
+    const body=JSON.parse(String(init?.body ?? "{}")) as LearningRequestType;
+    return new Response(JSON.stringify({
+      request_id:body.request_id,status:"blocked",exposure:"PUBLIC_DECLASSIFIED",result:null,
+      public_evidence:[{class:"FACTORY_RECOVERY_DENIED"}],
+      errors:[{code:"H2_FACTORY_RECOVERY_RUNTIME_NOT_CHANGED",message:"H2_FACTORY_RECOVERY_RUNTIME_NOT_CHANGED",retryable:false}]
+    }),{status:200});
+  };
+  const denied=await callProtectedService(
+    config,"user-1",req("recover_blocked_stage","r-recover-denied",{mission_id:"M-blocked"}),fakeFetch as typeof fetch
+  );
+  assert.equal(denied.status,"blocked");
+  assert.equal(denied.exposure,"PUBLIC_DECLASSIFIED");
+  assert.equal(denied.errors[0]?.retryable,false);
+});
+
 test("ADVERSARIAL: extra private trace is blocked at host boundary", async () => {
   const fakeFetch = async () => new Response(JSON.stringify({
     request_id:"r-leak",status:"accepted",exposure:"MODEL_SESSION_PRIVATE",
