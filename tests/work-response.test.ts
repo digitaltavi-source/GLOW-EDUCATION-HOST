@@ -14,6 +14,22 @@ test("work exposure: preserves safe declassified protected failure", () => {
   }),"SAFE_PUBLIC_FAILURE");
 });
 
+test("work exposure: preserves safe declassified blocked outcome", () => {
+  assert.equal(classifyWorkResponse({
+    status:"blocked",
+    exposure:"PUBLIC_DECLASSIFIED",
+    errors:[{code:"H2_SYNTHESIS_RECOVERY_BLOCKED_H2_CAPABILITY_PLAN"}]
+  }),"SAFE_PUBLIC_FAILURE");
+});
+
+test("work exposure: preserves safe declassified degraded outcome", () => {
+  assert.equal(classifyWorkResponse({
+    status:"degraded",
+    exposure:"PUBLIC_DECLASSIFIED",
+    errors:[{code:"MISSION_CONCURRENT_UPDATE"}]
+  }),"SAFE_PUBLIC_FAILURE");
+});
+
 test("work exposure: rejects unexpected successful public response", () => {
   assert.throws(
     () => classifyWorkResponse({status:"accepted",exposure:"PUBLIC_DECLASSIFIED"}),
