@@ -7,6 +7,7 @@ const operations = [
   "get_work",
   "submit_work",
   "inspect_blocked_stage",
+  "recover_blocked_stage",
   "approve_stage",
   "get_status",
   "get_delivery"
