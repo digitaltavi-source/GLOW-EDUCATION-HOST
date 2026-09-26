@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { createMcpExpressApp, getOAuthProtectedResourceMetadataUrl, requireBearerAuth } from "@modelcontextprotocol/express";
+import { getOAuthProtectedResourceMetadataUrl, requireBearerAuth } from "@modelcontextprotocol/express";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { McpServerFactory } from "@modelcontextprotocol/server";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
@@ -12,6 +12,7 @@ import { callProtectedService, checkProtectedReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
+import { createGlowMcpExpressApp } from "./mcp-app.js";
 
 const config = loadConfig();
 const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
@@ -336,10 +337,9 @@ const buildServer: McpServerFactory = ctx => {
 };
 
 const handler = createMcpHandler(buildServer);
-const app = createMcpExpressApp({
-  host: "0.0.0.0",
-  allowedHosts: (process.env.GLOW_ALLOWED_HOSTS ?? "localhost,127.0.0.1").split(",").map(v=>v.trim()).filter(Boolean)
-});
+const app = createGlowMcpExpressApp(
+  (process.env.GLOW_ALLOWED_HOSTS ?? "localhost,127.0.0.1").split(",").map(v=>v.trim()).filter(Boolean)
+);
 
 const mcpServerUrl = configuredMcpServerUrl;
 const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(mcpServerUrl);
