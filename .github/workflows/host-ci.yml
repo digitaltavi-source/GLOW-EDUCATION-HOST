@@ -1,0 +1,24 @@
+name: host-ci
+
+on:
+  push:
+    branches:
+      - candidate/chatgpt-host-v0.1.0
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install --ignore-scripts
+      - run: npm run build
+      - run: npm test

@@ -3,7 +3,7 @@
 **Học, dạy, luyện tập và sáng tạo cùng AI.**  
 **Learn, teach, practice and create with AI.**
 
-GLOW Education is an early-access AI learning interface designed to connect supported AI hosts to a protected education production service without exposing private factory internals.
+GLOW Education is an early-access AI learning interface designed to connect supported AI hosts to a protected education service.
 
 ## Trạng thái / Status
 
@@ -11,12 +11,7 @@ GLOW Education is an early-access AI learning interface designed to connect supp
 
 This public repository contains only declassified host-side interfaces, contracts and examples.
 
-It does **not** contain:
-- private capability systems;
-- internal production kits;
-- proprietary routing or evaluation logic;
-- internal prompts, thresholds or evidence;
-- private release packages.
+It does **not** contain protected backend implementation, private production logic, internal evaluation rules, confidential prompts, private release packages, or restricted evidence.
 
 ## Mục tiêu / Goal
 
@@ -37,9 +32,16 @@ A live production service is not yet claimed by this repository.
 
 ## Security principle
 
-Anything returned through the public host boundary is treated as **declassified**.
+The ChatGPT host has two explicit response classes:
 
-Private factory implementation details must never be embedded in this repository, client bundles, examples or logs.
+- `PUBLIC_DECLASSIFIED` — user-safe status, approval preview and final delivery;
+- `MODEL_SESSION_PRIVATE` — bounded work packages visible to the authenticated ChatGPT reasoning session only.
+
+`MODEL_SESSION_PRIVATE != PUBLIC DELIVERY`.
+
+Private work-package content must not be presented as final/public Factory output, logged as public content, cached into public examples, or copied into this repository as protected backend truth.
+
+Protected implementation details, private release identities, credentials and restricted evidence must never be embedded in the public source repository.
 
 ## License / contribution
 

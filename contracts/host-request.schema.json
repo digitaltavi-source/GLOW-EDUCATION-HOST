@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://glow.education/contracts/host-request.schema.json",
+  "title": "GLOW Education Host Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "operation",
+    "input"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "create_learning_experience",
+        "get_work",
+        "submit_work",
+        "inspect_blocked_stage",
+        "recover_blocked_stage",
+        "approve_stage",
+        "get_status",
+        "get_delivery"
+      ]
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "teacher",
+        "learner",
+        "parent",
+        "unspecified"
+      ],
+      "default": "unspecified"
+    },
+    "input": {
+      "type": "object"
+    },
+    "locale": {
+      "type": "string",
+      "default": "vi-VN"
+    },
+    "client_context": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
