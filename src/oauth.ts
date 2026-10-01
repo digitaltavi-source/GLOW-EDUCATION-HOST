@@ -55,6 +55,15 @@ export function createStaticBearerVerifier(config: StaticBearerConfig): OAuthTok
   };
 }
 
+
+export function createRejectAllVerifier(reason = "MCP_DISABLED_IN_STAGING"): OAuthTokenVerifier {
+  return {
+    async verifyAccessToken(): Promise<AuthInfo> {
+      throw new OAuthError(OAuthErrorCode.InvalidToken, reason);
+    }
+  };
+}
+
 export function createJwtVerifier(config: OAuthConfig): OAuthTokenVerifier {
   const jwks = createRemoteJWKSet(new URL(config.jwksUrl));
 
