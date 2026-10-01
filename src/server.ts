@@ -435,6 +435,9 @@ app.get(resourceMetadataV3Path, (_req,res) => {
 });
 
 app.get("/.well-known/oauth-authorization-server", (_req,res) => {
+  if (authMode === "staging_disabled") {
+    return res.status(503).json({error:"MCP_DISABLED_IN_STAGING"});
+  }
   res.json({
     issuer: publicAuthorizationServerBase,
     authorization_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/authorize",
@@ -448,16 +451,16 @@ app.get("/.well-known/oauth-authorization-server", (_req,res) => {
   });
 });
 
-const publicDir=path.dirname(fileURLToPath(import.meta.url));
+const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../public");
 
 app.get("/", (_req,res) => {
-  res.sendFile(path.join(publicDir,"index.html"));
+  res.sendFile("index.html",{root:publicDir});
 });
 app.get("/app", (_req,res) => {
-  res.sendFile(path.join(publicDir,"index.html"));
+  res.sendFile("index.html",{root:publicDir});
 });
 app.get("/results", (_req,res) => {
-  res.sendFile(path.join(publicDir,"index.html"));
+  res.sendFile("index.html",{root:publicDir});
 });
 
 app.get("/api/staging/profile", (_req,res) => {
@@ -509,7 +512,7 @@ app.post("/api/staging/delivery", async (req,res) => {
 
 app.get("/oauth-client.js", (_req,res) => {
   res.type("application/javascript");
-  res.sendFile(path.join(publicDir,"oauth-client.js"));
+  res.sendFile("oauth-client.js",{root:publicDir});
 });
 
 app.get("/oauth/consent", (_req,res) => {
@@ -555,7 +558,13 @@ button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:point
 });
 
 app.get("/healthz", (_req,res) => {
-  res.json({ok:true,product:"GLOW Education",version:"0.1.0-candidate",mode:"CHATGPT_WORK_LOOP"});
+  res.json({
+    ok:true,
+    product:"GLOW Education",
+    version:"0.1.0-candidate",
+    mode:config.combinedRuntimeModule ? "COMBINED_STAGING" : "REMOTE_PROTECTED_SERVICE",
+    mcp:authMode === "staging_disabled" ? "DISABLED" : "ENABLED"
+  });
 });
 
 app.get("/readyz", async (_req,res) => {
