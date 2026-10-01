@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - candidate/chatgpt-host-v0.1.0
+      - candidate/combined-staging-host-v0.2.0
   pull_request:
     branches:
       - main
@@ -14,11 +15,38 @@ permissions:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - run: npm install --ignore-scripts
-      - run: npm run build
-      - run: npm test
+
+      - name: Install
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build public host and staging UI
+        run: npm run build
+
+      - name: Test public contracts and security boundary
+        run: npm test
+
+      - name: Verify staging UI packaged
+        run: |
+          test -s dist/public/index.html
+          grep -q "GLOW Education" dist/public/index.html
+          grep -q "Combined Staging Candidate" dist/public/index.html
+
+      - name: Reject obvious secrets and private implementation paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist             '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{20,})' .; then
+            echo "Potential secret material found"
+            exit 1
+          fi
+          if grep -RInE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist             '(education-factory-next/|private-runtime/|release-assets/GLOW_EDUCATION_CAPABILITY_SYSTEM|host-integration/node-private-host/v2_staging_bridge)'             --include='*.ts' --include='*.js' --include='*.mjs' --include='*.json' --include='*.md' .; then
+            echo "Private Factory implementation path leaked into public repository"
+            exit 1
+          fi
