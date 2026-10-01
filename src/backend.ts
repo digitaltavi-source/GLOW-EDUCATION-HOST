@@ -84,6 +84,17 @@ export async function callCombinedPreviewService(
   return parsed.data;
 }
 
+export async function callConfiguredService(
+  config: HostConfig,
+  subject: string,
+  request: LearningRequestType
+): Promise<LearningResponseType> {
+  if (config.combinedRuntimeModule?.trim()) {
+    return callCombinedPreviewService(config, request);
+  }
+  return callProtectedService(config, subject, request);
+}
+
 export async function checkProtectedReadiness(
   config: HostConfig,
   fetchImpl: typeof fetch = fetch
