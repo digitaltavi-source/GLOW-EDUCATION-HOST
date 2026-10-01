@@ -1,27 +1,59 @@
-# Public Host Architecture
+# GLOW Education Host Architecture
+
+## Public repository role
 
 ```text
-ChatGPT
-  |
-  v
-GLOW Education Host
-  |
-  v
-Protected Service Boundary
-  |
-  v
-Private Backend
+Browser / ChatGPT
+       |
+       v
+GLOW-EDUCATION-HOST  [PUBLIC]
+UI / MCP / OAuth / public contracts / declassification
+       |
+       +-------------------------------+
+       |                               |
+       v                               v
+REMOTE PROTECTED SERVICE        COMBINED RUNTIME MODULE
+                               injected only at private
+                               assembly/deploy time
 ```
 
-The public host owns only host adaptation and declassified transport.
+The public host owns host adaptation and public egress. It does not own Factory semantics, private state, private evidence or qualification.
 
-It does not own:
-- private production flow;
-- backend decision logic;
-- private release state;
-- qualification state;
-- internal assurance decisions.
+## Combined staging mode
 
-Current host target: ChatGPT.
+```text
+ONE PUBLIC DOMAIN / LISTENER
+          |
+          v
+Public Host
+          |
+    generic runtime contract
+          |
+          v
+Protected runtime in-process
+```
 
-Future adapters may target Gemini and Claude after the ChatGPT vertical slice is verified.
+The private runtime implementation is absent from this repository. The private assembly selects and verifies the implementation by exact identity.
+
+## Trust boundaries
+1. browser/public HTTP boundary;
+2. MCP/OAuth authentication boundary;
+3. public-host-to-runtime contract boundary;
+4. declassification boundary;
+5. private Factory state/authority boundary.
+
+Co-location does not collapse these boundaries.
+
+## Runtime interface
+
+The combined runtime module must export `createGlowCombinedRuntime(options)`.
+
+It returns an object exposing `execute(publicRequest)`.
+
+The host validates the candidate response against its public schema and rejects non-`PUBLIC_DECLASSIFIED` output for browser combined mode.
+
+## Current claim
+
+`PUBLIC_HOST_COMBINED_STAGING_CANDIDATE`
+
+This architecture supports combined staging but does not itself prove a particular private Factory, deployment, domain or production qualification.
