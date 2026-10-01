@@ -1,73 +1,59 @@
 {
-  "schema_version": "0.1.0",
-  "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_MCP",
-  "state": "CANDIDATE_NOT_LIVE",
-  "purpose": "Deploy the declassified public ChatGPT/MCP host on Hostinger managed Node.js hosting.",
+  "schema_version": "0.2.0",
+  "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_OR_COMBINED",
+  "state": "COMBINED_STAGING_CANDIDATE_NOT_LIVE",
+  "purpose": "Deploy the public GLOW Education Host on Hostinger managed Node.js hosting, either against a remote protected service or with a private runtime injected by an authorized combined assembly.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
-    "branch": "candidate/chatgpt-host-v0.1.0"
+    "branch": "candidate/combined-staging-host-v0.2.0"
   },
   "runtime": {
     "node_version": "22.x",
     "repository_root": ".",
-    "build_command": "npm install --ignore-scripts && npm run build",
+    "build_command": "npm install --ignore-scripts --no-audit --no-fund && npm run build",
     "start_command": "npm start",
     "health_path": "/healthz",
+    "readiness_path": "/readyz",
+    "browser_path": "/",
     "mcp_path": "/mcp"
   },
-  "required_environment": [
-    {
-      "name": "GLOW_PROTECTED_SERVICE_URL",
-      "secret": false,
-      "required": true,
-      "meaning": "HTTPS URL of the live private Factory host"
+  "deployment_modes": {
+    "remote_protected_service": {
+      "required": [
+        "GLOW_PROTECTED_SERVICE_URL",
+        "GLOW_PROTECTED_SERVICE_TOKEN"
+      ],
+      "topology": "PUBLIC_HOST -> HTTPS_PROTECTED_SERVICE"
     },
-    {
-      "name": "GLOW_PROTECTED_SERVICE_TOKEN",
-      "secret": true,
-      "required": true,
-      "meaning": "Same bearer secret configured on private host"
-    },
-    {
-      "name": "GLOW_PUBLIC_MCP_URL",
-      "secret": false,
-      "required": true,
-      "meaning": "Public HTTPS MCP endpoint, ending in /mcp"
-    },
-    {
-      "name": "GLOW_ALLOWED_HOSTS",
-      "secret": false,
-      "required": true,
-      "meaning": "Public host/domain allowlist"
-    },
-    {
-      "name": "GLOW_OAUTH_ISSUER",
-      "secret": false,
-      "required": true
-    },
-    {
-      "name": "GLOW_OAUTH_AUDIENCE",
-      "secret": false,
-      "required": true
-    },
-    {
-      "name": "GLOW_OAUTH_JWKS_URL",
-      "secret": false,
-      "required": true
+    "combined_staging": {
+      "required": [
+        "GLOW_COMBINED_RUNTIME_MODULE",
+        "GLOW_STAGING_UI_ENABLED",
+        "GLOW_STAGING_ACCESS_CODE"
+      ],
+      "topology": "ONE_DOMAIN -> PUBLIC_HOST -> IN_PROCESS_PROTECTED_RUNTIME",
+      "runtime_module_source": "PRIVATE_ASSEMBLY_ONLY",
+      "private_module_published_in_public_repo": false
     }
+  },
+  "common_environment": [
+    "GLOW_ALLOWED_HOSTS",
+    "GLOW_PUBLIC_MCP_URL",
+    "GLOW_AUTH_MODE"
   ],
   "security": {
-    "private_assets_embedded": false,
-    "private_release_hashes_public": false,
-    "model_session_private_is_public_delivery": false,
-    "protected_backend_unavailable": "FAIL_CLOSED"
+    "public_repo_contains_private_factory_source": false,
+    "private_runtime_path_hardcoded_in_public_repo": false,
+    "secrets_committed": false,
+    "model_session_private_allowed_on_browser_combined_path": false,
+    "unknown_public_response_fields": "FAIL_CLOSED",
+    "combined_private_exposure": "FAIL_CLOSED"
   },
   "claims": {
-    "hostinger_deployed": false,
-    "publicly_reachable": false,
-    "oauth_live": false,
-    "chatgpt_connected": false,
-    "app_directory_approved": false
+    "host_build_verified": true,
+    "combined_interface_verified": true,
+    "live_hostinger_combined_deployment_verified": false,
+    "production_qualified": false
   },
-  "next_gate": "CREATE_HOSTINGER_PUBLIC_APP_AFTER_PRIVATE_APP_HAS_LIVE_HTTPS_URL"
+  "next_gate": "PRIVATE_EXACT_SHA_ASSEMBLY_THEN_LIVE_HOSTINGER_STAGING"
 }
