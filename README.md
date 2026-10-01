@@ -1,47 +1,90 @@
-# GLOW Education
+# GLOW Education Host
 
-**Học, dạy, luyện tập và sáng tạo cùng AI.**  
-**Learn, teach, practice and create with AI.**
+**Public AI host, staging workspace and declassification boundary for GLOW Education.**
 
-GLOW Education is an early-access AI learning interface designed to connect supported AI hosts to a protected education service.
+GLOW Education Host is the shareable/public half of a two-repository architecture:
 
-## Trạng thái / Status
+```text
+AI host / browser
+      |
+      v
+GLOW-EDUCATION-HOST (PUBLIC)
+UI + MCP/OAuth + public contracts + declassified egress
+      |
+      +--> remote protected service
+      |
+      +--> combined runtime module injected only at private build/deploy time
+```
 
-`EARLY ACCESS / HOST-INTEGRATION CANDIDATE`
+## Why this repository is public
 
-This public repository contains only declassified host-side interfaces, contracts and examples.
+This repository is designed to be inspectable and shareable as a portfolio-quality integration project. It demonstrates:
 
-It does **not** contain protected backend implementation, private production logic, internal evaluation rules, confidential prompts, private release packages, or restricted evidence.
+- typed public contracts;
+- MCP/OAuth host integration;
+- explicit `PUBLIC_DECLASSIFIED` vs `MODEL_SESSION_PRIVATE` boundaries;
+- fail-closed response validation;
+- one-domain combined deployment support without publishing protected Factory source;
+- responsive staging workspace;
+- automated regression and adversarial security tests.
 
-## Mục tiêu / Goal
+It intentionally does **not** contain protected Factory implementation, confidential prompts, private evidence, restricted release packages, secrets or proprietary runtime internals.
 
-One public learning interface, multiple AI hosts:
+## Deployment modes
 
-`ChatGPT -> GLOW Education Host -> protected service`
+### Remote protected service
 
-Future host adapters may include Gemini and Claude after the first ChatGPT vertical slice is validated.
+`PUBLIC HOST -> HTTPS protected service`
 
-## Current scope
+Use `GLOW_PROTECTED_SERVICE_URL` and `GLOW_PROTECTED_SERVICE_TOKEN`.
 
-- public request/response contracts;
-- public security/declassification boundary;
-- ChatGPT host profile;
-- host-neutral integration documentation.
+### Combined staging
 
-A live production service is not yet claimed by this repository.
+`ONE DOMAIN -> PUBLIC HOST -> injected private runtime module in-process`
 
-## Security principle
+Use `GLOW_COMBINED_RUNTIME_MODULE` only in the private assembly/deployment environment. The public repository never ships the private runtime module itself.
 
-The ChatGPT host has two explicit response classes:
+`1 DOMAIN != 1 SECURITY BOUNDARY`.
 
-- `PUBLIC_DECLASSIFIED` — user-safe status, approval preview and final delivery;
-- `MODEL_SESSION_PRIVATE` — bounded work packages visible to the authenticated ChatGPT reasoning session only.
+## Staging UI
 
-`MODEL_SESSION_PRIVATE != PUBLIC DELIVERY`.
+The public host ships a responsive browser workspace for:
 
-Private work-package content must not be presented as final/public Factory output, logged as public content, cached into public examples, or copied into this repository as protected backend truth.
+- staging access;
+- Start Mission;
+- mission status;
+- result retrieval;
+- visible combined/standalone runtime state.
 
-Protected implementation details, private release identities, credentials and restricted evidence must never be embedded in the public source repository.
+The UI is an adapter surface only. It does not own Factory semantics or qualification state.
+
+## Security laws
+
+- `PUBLIC HOST != PROTECTED FACTORY`
+- `PUBLIC ADAPTER != CANON`
+- `MODEL_SESSION_PRIVATE != PUBLIC DELIVERY`
+- unknown public-response fields fail closed;
+- combined web mode rejects `MODEL_SESSION_PRIVATE`;
+- secrets live in deployment environment variables, never source;
+- private runtime identity/path is supplied only by the private assembly.
+
+See [SECURITY_BOUNDARY.md](SECURITY_BOUNDARY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Current state
+
+`COMBINED_STAGING_HOST_CANDIDATE`
+
+A public host build or combined test does not imply production readiness, independent qualification or field verification.
+
+## Local development
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+To exercise combined mode you need an authorized runtime module supplied outside this public repository.
 
 ## License / contribution
 
