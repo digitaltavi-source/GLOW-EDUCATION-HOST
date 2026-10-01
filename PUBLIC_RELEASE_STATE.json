@@ -1,16 +1,18 @@
 {
   "product": "GLOW Education Host",
-  "version": "0.1.0-candidate",
-  "state": "CHATGPT_WORK_LOOP_HOST_CANDIDATE",
+  "version": "0.2.0-candidate",
+  "state": "COMBINED_STAGING_HOST_CANDIDATE",
+  "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
-  "live_backend_connected": false,
-  "real_failed_sow_regression_passed": false,
+  "browser_staging_ui": true,
+  "remote_protected_service_mode": true,
+  "combined_runtime_interface": true,
+  "private_core_embedded": false,
+  "private_runtime_module_published": false,
+  "model_session_private_contract": true,
+  "combined_browser_private_exposure_allowed": false,
+  "live_combined_deployment_verified": false,
   "independently_qualified": false,
   "field_verified": false,
-  "glow_5_star_qualified": false,
-  "private_core_embedded": false,
-  "chatgpt_work_loop_implemented": true,
-  "model_session_private_contract": true,
-  "backend_llm_api_required": false,
-  "chatgpt_end_to_end_verified": false
+  "glow_5_star_qualified": false
 }
