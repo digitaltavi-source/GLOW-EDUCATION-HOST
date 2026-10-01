@@ -4,7 +4,7 @@
   "private": false,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && esbuild src/oauth-client.ts --bundle --format=iife --global-name=GlowOAuth --outfile=dist/src/oauth-client.js && node -e \"const fs=require('fs');fs.mkdirSync('dist/src',{recursive:true});fs.mkdirSync('dist/public',{recursive:true});fs.copyFileSync('public/index.html','dist/src/index.html');fs.copyFileSync('public/index.html','dist/public/index.html');fs.copyFileSync('dist/src/oauth-client.js','dist/public/oauth-client.js')\"",
+    "build": "tsc -p tsconfig.json && esbuild src/oauth-client.ts --bundle --format=iife --global-name=GlowOAuth --outfile=dist/public/oauth-client.js && node -e \"const fs=require('fs');fs.mkdirSync('dist/public',{recursive:true});fs.copyFileSync('public/index.html','dist/public/index.html')\"",
     "test": "npm run build && node --test dist/tests/*.test.js",
     "dev": "tsx src/server.ts",
     "start": "node dist/src/server.js"
@@ -24,5 +24,8 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "esbuild": "^0.25.10"
+  },
+  "engines": {
+    "node": ">=22 <23"
   }
 }
