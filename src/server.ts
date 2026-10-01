@@ -448,7 +448,7 @@ app.get("/.well-known/oauth-authorization-server", (_req,res) => {
   });
 });
 
-const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../public");
+const publicDir=path.dirname(fileURLToPath(import.meta.url));
 
 app.get("/", (_req,res) => {
   res.sendFile(path.join(publicDir,"index.html"));
