@@ -7,7 +7,7 @@ import type { McpServerFactory } from "@modelcontextprotocol/server";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
-import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier } from "./oauth.js";
+import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier, createRejectAllVerifier } from "./oauth.js";
 import { callProtectedService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
@@ -46,7 +46,8 @@ async function invokeCombinedPreview(
 
 const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
 const publicAuthorizationServerBase = process.env.GLOW_PUBLIC_AUTHORIZATION_SERVER?.trim() || configuredMcpServerUrl.origin;
-const configuredAuthMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
+const explicitAuthMode = process.env.GLOW_AUTH_MODE?.trim().toLowerCase();
+const configuredAuthMode = explicitAuthMode || (config.combinedRuntimeModule ? "staging_disabled" : "oauth");
 const authMode = configuredAuthMode === "static_bearer" ? "hybrid" : configuredAuthMode;
 const supabaseOAuthConfig = {
   issuer: process.env.GLOW_OAUTH_ISSUER?.trim() || "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
@@ -60,8 +61,10 @@ const oauthConfig = authMode === "oauth"
     : null;
 const requiredScopes = authMode === "legacy_static"
   ? ["education.run"]
-  : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "email")
-      .split(/\s+/).map(v=>v.trim()).filter(Boolean);
+  : authMode === "staging_disabled"
+    ? []
+    : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "email")
+        .split(/\s+/).map(v=>v.trim()).filter(Boolean);
 const verifier = authMode === "legacy_static"
   ? createStaticBearerVerifier(loadStaticBearerConfig())
   : authMode === "hybrid"
@@ -70,8 +73,10 @@ const verifier = authMode === "legacy_static"
         oauthConfig: oauthConfig!,
         oauthScopes: requiredScopes
       })
-    : createJwtVerifier(oauthConfig!);
-const toolSecuritySchemes = authMode === "legacy_static"
+    : authMode === "staging_disabled"
+      ? createRejectAllVerifier()
+      : createJwtVerifier(oauthConfig!);
+const toolSecuritySchemes = authMode === "legacy_static" || authMode === "staging_disabled"
   ? undefined
   : [{ type: "oauth2" as const, scopes: requiredScopes }];
 
@@ -375,7 +380,7 @@ const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(mcpServerUrl);
 const resourceMetadata = buildProtectedResourceMetadata({
   resource:mcpServerUrl.toString(),
   authMode,
-  oauthIssuer:authMode === "legacy_static" ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
   scopes:requiredScopes
 });
 const auth = requireBearerAuth({
@@ -389,7 +394,7 @@ const resourceMetadataV2Url = getOAuthProtectedResourceMetadataUrl(mcpV2ServerUr
 const resourceMetadataV2 = buildProtectedResourceMetadata({
   resource:mcpV2ServerUrl.toString(),
   authMode,
-  oauthIssuer:authMode === "legacy_static" ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
   scopes:requiredScopes
 });
 const authV2 = requireBearerAuth({
@@ -403,7 +408,7 @@ const resourceMetadataV3Url = getOAuthProtectedResourceMetadataUrl(mcpV3ServerUr
 const resourceMetadataV3 = buildProtectedResourceMetadata({
   resource:mcpV3ServerUrl.toString(),
   authMode,
-  oauthIssuer:authMode === "legacy_static" ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
   scopes:requiredScopes
 });
 const authV3 = requireBearerAuth({
