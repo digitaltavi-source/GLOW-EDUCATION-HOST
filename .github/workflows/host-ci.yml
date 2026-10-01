@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install
         run: npm install --ignore-scripts --no-audit --no-fund
@@ -37,6 +37,41 @@ jobs:
           test -s dist/public/index.html
           grep -q "GLOW Education" dist/public/index.html
           grep -q "Combined Staging Candidate" dist/public/index.html
+
+      - name: Runtime smoke from hidden parent path
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .host-smoke
+          mkdir -p .host-smoke/public-host
+          cp -a dist package.json node_modules .host-smoke/public-host/
+          (
+            cd .host-smoke/public-host
+            PORT=3191 \
+            GLOW_ALLOWED_HOSTS=127.0.0.1,localhost \
+            GLOW_PROTECTED_SERVICE_URL=https://protected.example \
+            GLOW_PROTECTED_SERVICE_TOKEN=ci-placeholder-token \
+            GLOW_AUTH_MODE=staging_disabled \
+            node dist/src/server.js > /tmp/glow-host-smoke.log 2>&1 &
+            echo $! > /tmp/glow-host-smoke.pid
+          )
+          PID="$(cat /tmp/glow-host-smoke.pid)"
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:3191/healthz >/tmp/host-health.json; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3191/ >/tmp/host-root.html
+          curl -fsS http://127.0.0.1:3191/app >/tmp/host-app.html
+          curl -fsS http://127.0.0.1:3191/oauth-client.js >/tmp/oauth-client.js
+          grep -q "Combined Staging Candidate" /tmp/host-root.html
+          grep -q "Start Mission" /tmp/host-root.html
+          cmp /tmp/host-root.html /tmp/host-app.html
+          test -s /tmp/oauth-client.js
+          if grep -q "CONFIG_OAUTH_ISSUER_REQUIRED" /tmp/glow-host-smoke.log; then
+            cat /tmp/glow-host-smoke.log
+            exit 1
+          fi
 
       - name: Reject obvious secrets and private implementation paths
         shell: bash
