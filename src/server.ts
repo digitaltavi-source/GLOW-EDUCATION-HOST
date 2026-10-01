@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { getOAuthProtectedResourceMetadataUrl, requireBearerAuth } from "@modelcontextprotocol/express";
@@ -8,13 +8,42 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
 import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier } from "./oauth.js";
-import { callProtectedService, checkProtectedReadiness } from "./backend.js";
+import { callProtectedService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 import { createGlowMcpExpressApp } from "./mcp-app.js";
 
 const config = loadConfig();
+const stagingAccessCode = process.env.GLOW_STAGING_ACCESS_CODE?.trim() || "";
+
+function safeEqualSecret(received: string, expected: string) {
+  const a = Buffer.from(received);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function stagingAuthorized(req: { header(name: string): string | undefined }) {
+  if (!config.stagingUiEnabled || !stagingAccessCode) return false;
+  return safeEqualSecret(req.header("x-glow-staging-code")?.trim() || "", stagingAccessCode);
+}
+
+async function invokeCombinedPreview(
+  operation: "create_learning_experience" | "get_status" | "get_delivery",
+  role: "teacher" | "learner" | "parent" | "unspecified",
+  locale: string,
+  input: Record<string, unknown>
+) {
+  const request = LearningRequest.parse({
+    request_id: randomUUID(),
+    operation,
+    role,
+    locale,
+    input
+  });
+  return callCombinedPreviewService(config, request);
+}
+
 const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
 const publicAuthorizationServerBase = process.env.GLOW_PUBLIC_AUTHORIZATION_SERVER?.trim() || configuredMcpServerUrl.origin;
 const configuredAuthMode = (process.env.GLOW_AUTH_MODE?.trim() || "oauth").toLowerCase();
@@ -416,6 +445,63 @@ app.get("/.well-known/oauth-authorization-server", (_req,res) => {
 
 const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../public");
 
+app.get("/", (_req,res) => {
+  res.sendFile(path.join(publicDir,"index.html"));
+});
+app.get("/app", (_req,res) => {
+  res.sendFile(path.join(publicDir,"index.html"));
+});
+app.get("/results", (_req,res) => {
+  res.sendFile(path.join(publicDir,"index.html"));
+});
+
+app.get("/api/staging/profile", (_req,res) => {
+  res.json({
+    product:"GLOW Education Host",
+    mode:"COMBINED_STAGING",
+    combined_runtime: Boolean(config.combinedRuntimeModule),
+    staging_ui_enabled: Boolean(config.stagingUiEnabled),
+    authentication: config.stagingUiEnabled ? "ACCESS_CODE_REQUIRED" : "DISABLED",
+    claim_ceiling:"PUBLIC_HOST_COMBINED_STAGING_CANDIDATE"
+  });
+});
+
+app.post("/api/staging/start", async (req,res) => {
+  if (!stagingAuthorized(req)) return res.status(401).json({error:"STAGING_ACCESS_DENIED"});
+  try {
+    const role = z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale = z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    const input = z.record(z.string(), z.unknown()).parse(req.body?.input ?? {});
+    return res.json(await invokeCombinedPreview("create_learning_experience",role,locale,input));
+  } catch (error) {
+    return res.status(400).json({error:error instanceof Error ? error.message : "STAGING_START_FAILED"});
+  }
+});
+
+app.post("/api/staging/status", async (req,res) => {
+  if (!stagingAuthorized(req)) return res.status(401).json({error:"STAGING_ACCESS_DENIED"});
+  try {
+    const mission_id = z.string().min(1).max(128).parse(req.body?.mission_id);
+    const role = z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale = z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    return res.json(await invokeCombinedPreview("get_status",role,locale,{mission_id}));
+  } catch (error) {
+    return res.status(400).json({error:error instanceof Error ? error.message : "STAGING_STATUS_FAILED"});
+  }
+});
+
+app.post("/api/staging/delivery", async (req,res) => {
+  if (!stagingAuthorized(req)) return res.status(401).json({error:"STAGING_ACCESS_DENIED"});
+  try {
+    const mission_id = z.string().min(1).max(128).parse(req.body?.mission_id);
+    const role = z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale = z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    return res.json(await invokeCombinedPreview("get_delivery",role,locale,{mission_id}));
+  } catch (error) {
+    return res.status(400).json({error:error instanceof Error ? error.message : "STAGING_DELIVERY_FAILED"});
+  }
+});
+
 app.get("/oauth-client.js", (_req,res) => {
   res.type("application/javascript");
   res.sendFile(path.join(publicDir,"oauth-client.js"));
@@ -468,11 +554,24 @@ app.get("/healthz", (_req,res) => {
 });
 
 app.get("/readyz", async (_req,res) => {
+  if (config.combinedRuntimeModule) {
+    const readiness = await checkCombinedPreviewReadiness(config);
+    return res.status(readiness.ok ? 200 : 503).json({
+      ok: readiness.ok,
+      product: "GLOW Education",
+      public_host: "running",
+      runtime_mode: "COMBINED_STAGING",
+      combined_runtime: readiness.ok ? "reachable" : "unavailable",
+      code: readiness.code
+    });
+  }
+
   const readiness = await checkProtectedReadiness(config);
-  res.status(readiness.ok ? 200 : 503).json({
+  return res.status(readiness.ok ? 200 : 503).json({
     ok: readiness.ok,
     product: "GLOW Education",
     public_host: "running",
+    runtime_mode: "REMOTE_PROTECTED_SERVICE",
     protected_factory: readiness.ok ? "reachable_authenticated" : "unavailable",
     code: readiness.code
   });
