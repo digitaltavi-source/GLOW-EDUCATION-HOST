@@ -22,7 +22,7 @@ export function buildProtectedResourceMetadata(args: {
     ...(scopes.length?{scopes_supported:scopes}:{})
   };
 
-  if(authMode!=="static_bearer"){
+  if(authMode!=="static_bearer" && authMode!=="legacy_static" && authMode!=="staging_disabled"){
     const issuer=String(args.oauthIssuer ?? "").trim();
     if(!issuer) throw new Error("OAUTH_ISSUER_REQUIRED_FOR_RESOURCE_METADATA");
     const parsed=new URL(issuer);
