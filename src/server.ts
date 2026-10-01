@@ -8,7 +8,7 @@ import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { loadConfig } from "./config.js";
 import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier, createRejectAllVerifier } from "./oauth.js";
-import { callProtectedService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
+import { callConfiguredService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
@@ -120,7 +120,7 @@ async function invoke(
     request_id: request_id ?? randomUUID(),
     operation, role, locale, input
   });
-  return callProtectedService(config, subject, request);
+  return callConfiguredService(config, subject, request);
 }
 
 const buildServer: McpServerFactory = ctx => {
