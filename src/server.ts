@@ -474,6 +474,16 @@ app.get("/api/staging/profile", (_req,res) => {
   });
 });
 
+app.post("/api/staging/check", (req,res) => {
+  if (!stagingAuthorized(req)) return res.status(401).json({error:"STAGING_ACCESS_DENIED"});
+  return res.json({
+    ok:true,
+    code:"STAGING_ACCESS_GRANTED",
+    combined_runtime:Boolean(config.combinedRuntimeModule),
+    staging_ui_enabled:Boolean(config.stagingUiEnabled)
+  });
+});
+
 app.post("/api/staging/start", async (req,res) => {
   if (!stagingAuthorized(req)) return res.status(401).json({error:"STAGING_ACCESS_DENIED"});
   try {
