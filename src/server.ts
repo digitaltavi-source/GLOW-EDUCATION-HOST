@@ -142,8 +142,8 @@ const buildServer: McpServerFactory = ctx => {
     },
     async () => toolResult({
       product: "GLOW Education",
-      version: "0.1.0-candidate",
-      status: "CHATGPT_WORK_LOOP_CANDIDATE"
+      version: "0.2.0-live-demo",
+      status: "LIVE_DEMO_WORK_LOOP_VERIFIED_NOT_PRODUCTION"
     })
   );
 
@@ -470,7 +470,7 @@ app.get("/api/staging/profile", (_req,res) => {
     combined_runtime: Boolean(config.combinedRuntimeModule),
     staging_ui_enabled: Boolean(config.stagingUiEnabled),
     authentication: config.stagingUiEnabled ? "ACCESS_CODE_REQUIRED" : "DISABLED",
-    claim_ceiling:"PUBLIC_HOST_COMBINED_STAGING_CANDIDATE"
+    claim_ceiling:"SUPERVISED_LIVE_DEMO_VERIFIED_NOT_PRODUCTION"
   });
 });
 
@@ -571,7 +571,7 @@ app.get("/healthz", (_req,res) => {
   res.json({
     ok:true,
     product:"GLOW Education",
-    version:"0.1.0-candidate",
+    version:"0.2.0-live-demo",
     mode:config.combinedRuntimeModule ? "COMBINED_STAGING" : "REMOTE_PROTECTED_SERVICE",
     mcp:authMode === "staging_disabled" ? "DISABLED" : "ENABLED"
   });
