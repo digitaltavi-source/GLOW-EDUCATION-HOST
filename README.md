@@ -72,9 +72,9 @@ See [SECURITY_BOUNDARY.md](SECURITY_BOUNDARY.md) and [docs/ARCHITECTURE.md](docs
 
 ## Current state
 
-`COMBINED_STAGING_HOST_CANDIDATE`
+`LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION`
 
-A public host build or combined test does not imply production readiness, independent qualification or field verification.
+The darkgrey Hostinger deployment has passed live combined-host and ChatGPT MCP work-loop acceptance for supervised demos. The browser surface remains a PUBLIC_DECLASSIFIED preview adapter; the full governed Factory work loop is exercised through the ChatGPT plugin/MCP path. This does not imply production qualification, independent qualification, reproduction across restart, or field verification.
 
 ## Local development
 
