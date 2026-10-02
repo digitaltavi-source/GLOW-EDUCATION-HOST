@@ -5,7 +5,7 @@
   "purpose": "Deploy the public GLOW Education Host on Hostinger managed Node.js hosting, either against a remote protected service or with a private runtime injected by an authorized combined assembly.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
-    "branch": "candidate/combined-staging-host-v0.2.0"
+    "branch": "main"
   },
   "runtime": {
     "node_version": "22.x",
