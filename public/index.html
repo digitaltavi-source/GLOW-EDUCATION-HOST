@@ -12,7 +12,7 @@
 .grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:20px}.card{padding:22px}.card h2{margin:0 0 6px;font-size:21px}.card p{margin:0 0 16px;color:#64748b;line-height:1.5}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:750;margin:0 0 6px;color:#334155}input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;font:inherit;outline:none}textarea{min-height:96px;resize:vertical}#request{min-height:145px}input:focus,select:focus,textarea:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button,a.btn{appearance:none;border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.primary{background:#111827;color:#fff}.secondary{background:#eef2ff;color:#3730a3}.danger{background:#fee2e2;color:#991b1b}.ghost{background:#f8fafc;color:#334155;border:1px solid #e2e8f0!important}button:disabled{opacity:.5;cursor:not-allowed}
 .authbox{padding:14px;border-radius:15px;background:#f8fafc;border:1px solid #e2e8f0}.auth-status{font-size:13px;color:#475569;margin-top:10px}.auth-status[data-error="1"]{color:#b91c1c}.hidden{display:none!important}
-.workspace{margin-top:20px;padding:22px}.workspace-head{display:flex;justify-content:space-between;gap:16px;align-items:center}.phase{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.pill{padding:8px 10px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:800}.result{margin-top:14px;border-radius:16px;background:#0f172a;color:#e2e8f0;padding:16px;min-height:150px;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55}.approval{margin-top:16px;padding:16px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a}.approval pre{white-space:pre-wrap;font-size:12px;color:#78350f}
+.workspace{margin-top:20px;padding:22px}.workspace-head{display:flex;justify-content:space-between;gap:16px;align-items:center}.phase{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.pill{padding:8px 10px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:800}.result{margin-top:14px;border-radius:16px;background:#f8fafc;color:#0f172a;padding:18px;min-height:110px;white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.6;border:1px solid #e2e8f0}.result[data-kind="success"]{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.result[data-kind="warning"]{background:#fffbeb;border-color:#fde68a;color:#92400e}.result[data-kind="error"]{background:#fef2f2;border-color:#fecaca;color:#991b1b}.technical{margin-top:14px}.technical summary{cursor:pointer;font-weight:800;color:#475569}.technical pre{margin-top:10px;border-radius:14px;background:#0f172a;color:#e2e8f0;padding:14px;max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.5}.approval{margin-top:16px;padding:16px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a}.approval pre{white-space:pre-wrap;font-size:12px;color:#78350f}
 .notice{margin-top:14px;padding:12px 14px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:13px;line-height:1.5}
 @media(max-width:860px){.grid{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}}
 </style>
@@ -74,16 +74,18 @@
 </div>
 <div class="phase"><span class="pill">H1 · Understanding</span><span class="pill">H2 · Blueprint</span><span class="pill">H3 · Production</span><span class="pill">Approval</span><span class="pill">Delivery</span></div>
 <div class="actions">
-<button class="secondary" id="refresh" disabled>Cập nhật trạng thái</button>
+<button class="secondary" id="refresh" disabled>Cập nhật ngay</button>
 <button class="ghost" id="delivery" disabled>Xem delivery</button>
-<a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noreferrer">Mở ChatGPT để tiếp tục reasoning</a>
+<button class="primary" id="continueChatgpt" disabled>Tiếp tục trong GLOW Education</button>
 </div>
+<div id="handoffHint" class="notice hidden"><strong>Đang chờ reasoning:</strong> nút “Tiếp tục trong GLOW Education” sẽ sao chép lệnh có đúng Mission ID rồi mở plugin. Bạn không cần nhập lại yêu cầu đã điền trên web.</div>
 <div id="approvalPanel" class="approval hidden">
 <strong>Factory đang chờ quyết định của bạn</strong>
 <pre id="approvalSummary"></pre>
 <div class="actions"><button id="approve" class="primary" disabled>APPROVE</button><button id="reject" class="danger" disabled>REJECT</button></div>
 </div>
 <div class="result" id="result">Đăng nhập và tạo mission để bắt đầu.</div>
+<details class="technical"><summary>Chi tiết kỹ thuật (JSON)</summary><pre id="technical">Chưa có dữ liệu kỹ thuật.</pre></details>
 </section>
 </div>
 <script src="/web-client.js"></script>
