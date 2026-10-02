@@ -1,7 +1,7 @@
 {
   "product": "GLOW Education Host",
   "version": "0.2.0-candidate",
-  "state": "COMBINED_STAGING_HOST_CANDIDATE",
+  "state": "LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION",
   "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
   "browser_staging_ui": true,
@@ -11,8 +11,16 @@
   "private_runtime_module_published": false,
   "model_session_private_contract": true,
   "combined_browser_private_exposure_allowed": false,
-  "live_combined_deployment_verified": false,
+  "live_combined_deployment_verified": true,
   "independently_qualified": false,
   "field_verified": false,
-  "glow_5_star_qualified": false
+  "glow_5_star_qualified": false,
+  "plugin_binding": {
+    "name": "glow-education-single-domain",
+    "version": "1.1.0",
+    "mcp_path": "/mcp-v2",
+    "scope": "PRIVATE_USER"
+  },
+  "browser_surface": "PUBLIC_DECLASSIFIED_PREVIEW_ONLY",
+  "full_factory_surface": "CHATGPT_MCP_WORK_LOOP"
 }
