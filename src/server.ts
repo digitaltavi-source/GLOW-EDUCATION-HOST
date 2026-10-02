@@ -609,6 +609,11 @@ app.get("/oauth-client.js", (_req,res) => {
   res.sendFile("oauth-client.js",{root:publicDir});
 });
 
+app.get("/web-client.js", (_req,res) => {
+  res.type("application/javascript");
+  res.sendFile("web-client.js",{root:publicDir});
+});
+
 app.get("/oauth/consent", (_req,res) => {
   res.type("html").send(`<!doctype html>
 <html lang="vi">
