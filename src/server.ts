@@ -153,7 +153,7 @@ async function invokeWeb(
 
 const buildServer: McpServerFactory = ctx => {
   const server = new McpServer(
-    { name: "glow-education", version: "0.1.0" },
+    { name: "glow-education", version: "0.2.0" },
     {
       instructions:
         "Use GLOW Education only for the user's explicit learning request. ChatGPT is the reasoning/intelligence host. The backend owns Factory state, Kit sequencing, validation, approval binding, freeze/admission, evidence and delivery boundaries. When a work package is returned, perform only that bounded work, then submit the result. Never invent success, approvals, evidence, or Factory state."
