@@ -1,8 +1,8 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
   "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_OR_COMBINED",
-  "state": "LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION",
-  "purpose": "Deploy the public GLOW Education Host on Hostinger managed Node.js hosting, either against a remote protected service or with a private runtime injected by an authorized combined assembly.",
+  "state": "LIVE_MISSION_CONTROL_CANDIDATE_REDEPLOY_REQUIRED",
+  "purpose": "Deploy the GLOW Education Public Host and OAuth-authenticated Mission Control on Hostinger managed Node.js hosting, with the private Factory runtime injected only through the authorized combined assembly.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
     "branch": "main"
@@ -28,10 +28,12 @@
     "combined_staging": {
       "required": [
         "GLOW_COMBINED_RUNTIME_MODULE",
-        "GLOW_STAGING_UI_ENABLED",
-        "GLOW_STAGING_ACCESS_CODE"
+        "GLOW_AUTH_MODE",
+        "GLOW_OAUTH_ISSUER",
+        "GLOW_OAUTH_AUDIENCE",
+        "GLOW_OAUTH_JWKS_URL"
       ],
-      "topology": "ONE_DOMAIN -> PUBLIC_HOST -> IN_PROCESS_PROTECTED_RUNTIME",
+      "topology": "ONE_DOMAIN -> OAUTH MISSION CONTROL + CHATGPT MCP -> IN_PROCESS_PROTECTED_RUNTIME",
       "runtime_module_source": "PRIVATE_ASSEMBLY_ONLY",
       "private_module_published_in_public_repo": false
     }
@@ -39,7 +41,10 @@
   "common_environment": [
     "GLOW_ALLOWED_HOSTS",
     "GLOW_PUBLIC_MCP_URL",
-    "GLOW_AUTH_MODE"
+    "GLOW_AUTH_MODE",
+    "GLOW_OAUTH_ISSUER",
+    "GLOW_OAUTH_AUDIENCE",
+    "GLOW_OAUTH_JWKS_URL"
   ],
   "security": {
     "public_repo_contains_private_factory_source": false,
@@ -52,8 +57,8 @@
   "claims": {
     "host_build_verified": true,
     "combined_interface_verified": true,
-    "live_hostinger_combined_deployment_verified": true,
+    "live_hostinger_combined_deployment_verified": false,
     "production_qualified": false
   },
-  "next_gate": "PERSISTENCE_REPRODUCTION_AND_PUBLIC_REVIEW_IF_DESIRED"
+  "next_gate": "REDEPLOY_DARKGREY_AND_VERIFY_OAUTH_MISSION_CONTROL"
 }
