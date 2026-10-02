@@ -22,7 +22,7 @@ test("NORMAL: combined binding dispatches MCP work to combined runtime", async (
   await writeFile(modulePath, `
     export async function createGlowCombinedRuntime() {
       return {
-        async execute(raw) {
+        async execute(subject, raw) {
           return {
             request_id: raw.request_id,
             status: "blocked",
@@ -46,6 +46,40 @@ test("NORMAL: combined binding dispatches MCP work to combined runtime", async (
   }
 });
 
+
+test("PRIVATE WORK: combined MCP path propagates subject and preserves MODEL_SESSION_PRIVATE", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "glow-combined-private-"));
+  const modulePath = path.join(dir, "runtime.mjs");
+  await writeFile(modulePath, `
+    export async function createGlowCombinedRuntime() {
+      return {
+        async execute(subject, raw) {
+          if (subject !== "subject-private") throw new Error("SUBJECT_NOT_PROPAGATED");
+          return {
+            request_id: raw.request_id,
+            status: "accepted",
+            exposure: "MODEL_SESSION_PRIVATE",
+            result: { work: { kind: "CAPABILITY_SCREENING", work_token: "fixture-token" } },
+            public_evidence: [],
+            errors: []
+          };
+        }
+      };
+    }
+  `);
+  try {
+    const config: HostConfig = {
+      combinedRuntimeModule: pathToFileURL(modulePath).href,
+      port: 3000
+    };
+    const out = await callConfiguredService(config, "subject-private", request);
+    assert.equal(out.exposure, "MODEL_SESSION_PRIVATE");
+    assert.equal(out.status, "accepted");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("FAILURE: remote mode without protected service fails closed", async () => {
   const config: HostConfig = { port: 3000 };
   await assert.rejects(
@@ -60,7 +94,7 @@ test("ADVERSARIAL: combined binding takes precedence over stray remote config", 
   await writeFile(modulePath, `
     export async function createGlowCombinedRuntime() {
       return {
-        async execute(raw) {
+        async execute(subject, raw) {
           return {
             request_id: raw.request_id,
             status: "blocked",
@@ -92,7 +126,7 @@ test("RECOVERY: a valid combined binding recovers from missing remote-service co
   await writeFile(modulePath, `
     export async function createGlowCombinedRuntime() {
       return {
-        async execute(raw) {
+        async execute(subject, raw) {
           return {
             request_id: raw.request_id,
             status: "blocked",
