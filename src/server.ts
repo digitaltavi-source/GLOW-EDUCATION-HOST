@@ -123,6 +123,33 @@ async function invoke(
   return callConfiguredService(config, subject, request);
 }
 
+async function webSubject(req: { header(name: string): string | undefined }) {
+  const authorization=req.header("authorization")?.trim() || "";
+  const match=/^Bearer\s+(.+)$/i.exec(authorization);
+  if(!match) throw new Error("AUTH_REQUIRED");
+  const info=await verifier.verifyAccessToken(match[1]);
+  const subject=info.extra?.["sub"];
+  if(typeof subject!=="string" || !subject.trim()) throw new Error("AUTH_REQUIRED");
+  return subject;
+}
+
+async function invokeWeb(
+  req: { header(name: string): string | undefined },
+  operation: "create_learning_experience"|"approve_stage"|"get_status"|"get_delivery",
+  role: "teacher"|"learner"|"parent"|"unspecified",
+  locale: string,
+  input: Record<string, unknown>
+) {
+  const subject=await webSubject(req);
+  const request=LearningRequest.parse({
+    request_id: randomUUID(),
+    operation, role, locale, input
+  });
+  const out=await callConfiguredService(config,subject,request);
+  if(out.exposure!=="PUBLIC_DECLASSIFIED") throw new Error("WEB_PRIVATE_EXPOSURE_REJECTED");
+  return out;
+}
+
 const buildServer: McpServerFactory = ctx => {
   const server = new McpServer(
     { name: "glow-education", version: "0.1.0" },
@@ -517,6 +544,63 @@ app.post("/api/staging/delivery", async (req,res) => {
     return res.json(await invokeCombinedPreview("get_delivery",role,locale,{mission_id}));
   } catch (error) {
     return res.status(400).json({error:error instanceof Error ? error.message : "STAGING_DELIVERY_FAILED"});
+  }
+});
+
+app.post("/api/web/start", async (req,res) => {
+  try {
+    const role=z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale=z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    const input=z.record(z.string(),z.unknown()).parse(req.body?.input ?? {});
+    return res.json(await invokeWeb(req,"create_learning_experience",role,locale,input));
+  } catch(error) {
+    const code=error instanceof Error?error.message:"WEB_START_FAILED";
+    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+  }
+});
+
+app.post("/api/web/status", async (req,res) => {
+  try {
+    const mission_id=z.string().min(1).max(128).parse(req.body?.mission_id);
+    const role=z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale=z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    return res.json(await invokeWeb(req,"get_status",role,locale,{mission_id}));
+  } catch(error) {
+    const code=error instanceof Error?error.message:"WEB_STATUS_FAILED";
+    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+  }
+});
+
+app.post("/api/web/approval", async (req,res) => {
+  try {
+    const mission_id=z.string().min(1).max(128).parse(req.body?.mission_id);
+    const role=z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale=z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    const approval=z.object({
+      mission_id:z.string().min(1).max(128),
+      stage:z.enum(["H1","H2","H3"]),
+      decision:z.enum(["APPROVE","REJECT"]),
+      candidate_sha256:z.string().length(64),
+      assurance_sha256:z.string().length(64),
+      freeze_input_bundle_hash:z.string().length(64)
+    }).strict().parse(req.body?.approval);
+    if(approval.mission_id!==mission_id) throw new Error("APPROVAL_MISSION_MISMATCH");
+    return res.json(await invokeWeb(req,"approve_stage",role,locale,{mission_id,approval}));
+  } catch(error) {
+    const code=error instanceof Error?error.message:"WEB_APPROVAL_FAILED";
+    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+  }
+});
+
+app.post("/api/web/delivery", async (req,res) => {
+  try {
+    const mission_id=z.string().min(1).max(128).parse(req.body?.mission_id);
+    const role=z.enum(["teacher","learner","parent","unspecified"]).default("unspecified").parse(req.body?.role);
+    const locale=z.string().min(2).max(32).default("vi-VN").parse(req.body?.locale);
+    return res.json(await invokeWeb(req,"get_delivery",role,locale,{mission_id}));
+  } catch(error) {
+    const code=error instanceof Error?error.message:"WEB_DELIVERY_FAILED";
+    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
   }
 });
 
