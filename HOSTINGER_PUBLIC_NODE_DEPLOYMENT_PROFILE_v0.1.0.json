@@ -1,7 +1,7 @@
 {
   "schema_version": "0.2.0",
   "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_OR_COMBINED",
-  "state": "COMBINED_STAGING_CANDIDATE_NOT_LIVE",
+  "state": "LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION",
   "purpose": "Deploy the public GLOW Education Host on Hostinger managed Node.js hosting, either against a remote protected service or with a private runtime injected by an authorized combined assembly.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
@@ -15,7 +15,7 @@
     "health_path": "/healthz",
     "readiness_path": "/readyz",
     "browser_path": "/",
-    "mcp_path": "/mcp"
+    "mcp_path": "/mcp-v2"
   },
   "deployment_modes": {
     "remote_protected_service": {
@@ -52,8 +52,8 @@
   "claims": {
     "host_build_verified": true,
     "combined_interface_verified": true,
-    "live_hostinger_combined_deployment_verified": false,
+    "live_hostinger_combined_deployment_verified": true,
     "production_qualified": false
   },
-  "next_gate": "PRIVATE_EXACT_SHA_ASSEMBLY_THEN_LIVE_HOSTINGER_STAGING"
+  "next_gate": "PERSISTENCE_REPRODUCTION_AND_PUBLIC_REVIEW_IF_DESIRED"
 }
