@@ -126,8 +126,9 @@ async function invoke(
 async function webSubject(req: { header(name: string): string | undefined }) {
   const authorization=req.header("authorization")?.trim() || "";
   const match=/^Bearer\s+(.+)$/i.exec(authorization);
-  if(!match) throw new Error("AUTH_REQUIRED");
-  const info=await verifier.verifyAccessToken(match[1]);
+  const bearer=match?.[1];
+  if(!bearer) throw new Error("AUTH_REQUIRED");
+  const info=await verifier.verifyAccessToken(bearer);
   const subject=info.extra?.["sub"];
   if(typeof subject!=="string" || !subject.trim()) throw new Error("AUTH_REQUIRED");
   return subject;
