@@ -36,7 +36,7 @@ jobs:
         run: |
           test -s dist/public/index.html
           grep -q "GLOW Education" dist/public/index.html
-          grep -q "Combined Staging Candidate" dist/public/index.html
+          grep -q "Live Demo · Browser Preview" dist/public/index.html
 
       - name: Runtime smoke from hidden parent path
         shell: bash
@@ -64,7 +64,7 @@ jobs:
           curl -fsS http://127.0.0.1:3191/ >/tmp/host-root.html
           curl -fsS http://127.0.0.1:3191/app >/tmp/host-app.html
           curl -fsS http://127.0.0.1:3191/oauth-client.js >/tmp/oauth-client.js
-          grep -q "Combined Staging Candidate" /tmp/host-root.html
+          grep -q "Live Demo · Browser Preview" /tmp/host-root.html
           grep -q "Start Mission" /tmp/host-root.html
           cmp /tmp/host-root.html /tmp/host-app.html
           test -s /tmp/oauth-client.js
