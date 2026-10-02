@@ -6,7 +6,7 @@ import type { HostConfig } from "./config.js";
 export class BackendError extends Error {}
 
 type CombinedRuntime = {
-  execute(raw: LearningRequestType): Promise<unknown>;
+  execute(subject: string, raw: LearningRequestType): Promise<unknown>;
 };
 
 let combinedRuntimePromise: Promise<CombinedRuntime> | null = null;
@@ -75,7 +75,7 @@ export async function callCombinedPreviewService(
   runtimeOverride?: CombinedRuntime
 ): Promise<LearningResponseType> {
   const runtime = runtimeOverride ?? await getCombinedRuntime(config);
-  const raw = await runtime.execute(request);
+  const raw = await runtime.execute("staging-browser", request);
   const parsed = LearningResponse.safeParse(raw);
   if (!parsed.success) throw new BackendError("COMBINED_DECLASSIFICATION_SCHEMA_REJECTED");
   if (parsed.data.exposure !== "PUBLIC_DECLASSIFIED") {
@@ -90,7 +90,11 @@ export async function callConfiguredService(
   request: LearningRequestType
 ): Promise<LearningResponseType> {
   if (config.combinedRuntimeModule?.trim()) {
-    return callCombinedPreviewService(config, request);
+    const runtime = await getCombinedRuntime(config);
+    const raw = await runtime.execute(subject, request);
+    const parsed = LearningResponse.safeParse(raw);
+    if (!parsed.success) throw new BackendError("COMBINED_RESPONSE_SCHEMA_REJECTED");
+    return parsed.data;
   }
   return callProtectedService(config, subject, request);
 }
