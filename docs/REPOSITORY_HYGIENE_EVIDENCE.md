@@ -1,31 +1,21 @@
 # Repository Hygiene Evidence — 2026-10-02
 
 ## Policy
-This repository uses exactly three persistent branch roles:
-- main: current promoted version.
+This PUBLIC HOST repository uses exactly two persistent branch roles:
+- main: current deployable Public Host baseline.
 - sandbox: the only experimentation/integration branch.
-- version-backup: exactly one immediate predecessor for rollback.
 
-Temporary branches are not durable products. After work is accepted, preserve evidence here, promote to main, reset sandbox to main, rotate version-backup to the prior main, and remove obsolete temporary branches.
+There is no durable version-backup branch for GLOW-EDUCATION-HOST. Rollback is provided by Git history, release/deployment evidence, and the private Factory's governed component lock.
 
-## Promotion evidence
-Promoted SHA: d848a8f54d1b315d48288193b72034d3c358d390
-Immediate predecessor retained for rollback: b2008d7f5123eb5facf3457ea277aeb71dc43be6
+Temporary candidate/repair/backup branches are not durable products and must be retired after their accepted changes and evidence are preserved.
 
-GitHub Actions evidence for promoted SHA:
-- host-ci run 36950787818 — SUCCESS
-- host-ci run 36953374391 — SUCCESS
-- PR validation run 36953377650 — SUCCESS
+## Current baseline
+Current deployment branch: main.
 
-Lineage evidence:
-- candidate/combined-staging-host-v0.2.0 and candidate/chatgpt-host-v0.1.0 were identical at d848a8f54d1b315d48288193b72034d3c358d390 before cleanup.
-- repair/mcp-json-limit-2026-09-26 was identical to predecessor b2008d7f5123eb5facf3457ea277aeb71dc43be6.
-- Promotion to main was a non-forced fast-forward.
+The repository previously carried candidate/repair branches and a temporary version-backup branch during hygiene work. Those refs are obsolete once GitHub default branch is moved to main and deletion is performed.
 
-## Hygiene rule
-Normal lifecycle:
+## Lifecycle
 sandbox -> CI/regression/evidence -> main
-prior main -> version-backup
 then sandbox is synchronized to main and temporary branches are deleted.
 
-Do not create durable candidate/repair branches. If a temporary branch is unavoidable, it must be deleted after its evidence is captured and its accepted changes are integrated.
+Do not create durable candidate/repair/version-backup branches in this PUBLIC HOST repository.
