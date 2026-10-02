@@ -3,8 +3,8 @@ name: host-ci
 on:
   push:
     branches:
-      - candidate/chatgpt-host-v0.1.0
-      - candidate/combined-staging-host-v0.2.0
+      - main
+      - sandbox
   pull_request:
     branches:
       - main
