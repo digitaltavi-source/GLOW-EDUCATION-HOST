@@ -1,7 +1,7 @@
 {
   "schema_version": "0.4.0",
   "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_OR_COMBINED",
-  "state": "RUNTIME_IDENTITY_CONTRACT_READY_REDEPLOY_REQUIRED",
+  "state": "LIVE_COMBINED_RUNTIME_VERIFIED_RUNTIME_IDENTITY_ACTIVE",
   "purpose": "Deploy the GLOW Education Public Host and OAuth-authenticated Mission Control on Hostinger managed Node.js hosting, with the private Factory runtime injected only through the authorized combined assembly. The plugin is a thin adapter to the stable MCP URL; deployed backend identity is authoritative behind that URL.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
@@ -49,6 +49,16 @@
     "subject_exposed": false,
     "secrets_exposed": false
   },
+  "verified_live_topology": {
+    "public_host_sha": "608abb7f372cdf72a7082ad20ed90b8297e970c0",
+    "private_factory_sha": "b5d2d6ba81a570807d1c943c4ab4fc13624ed6ec",
+    "capability_release": "GLOW_EDUCATION_CAPABILITY_SYSTEM_v0.10.3-rc13.zip",
+    "backend_binding": "IN_PROCESS_COMBINED_RUNTIME",
+    "auth_provider": "SUPABASE_OAUTH",
+    "mcp_path": "/mcp-v2",
+    "mission_store_mode": "postgres",
+    "durable_state_mode": "mysql"
+  },
   "security": {
     "public_repo_contains_private_factory_source": false,
     "private_runtime_path_hardcoded_in_public_repo": false,
@@ -61,8 +71,8 @@
     "host_build_verified": true,
     "runtime_identity_contract_ci_verified": true,
     "combined_interface_verified": true,
-    "live_hostinger_combined_deployment_verified": false,
+    "live_hostinger_combined_deployment_verified": true,
     "production_qualified": false
   },
-  "next_gate": "FACTORY_COMPONENT_REBIND_COMBINED_REVERIFY_HOSTINGER_REDEPLOY_THEN_VERIFY_SYSTEM_IDENTITY"
+  "next_gate": "CONTINUE_SOP_END_TO_END_QUALIFICATION_AND_PERSISTENCE_REPRODUCTION"
 }
