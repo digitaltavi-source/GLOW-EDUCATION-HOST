@@ -1,7 +1,7 @@
 {
   "product": "GLOW Education Host",
   "version": "0.2.0-candidate",
-  "state": "LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION",
+  "state": "RUNTIME_IDENTITY_ADDED_REDEPLOY_REVERIFY_REQUIRED",
   "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
   "browser_staging_ui": true,
@@ -11,16 +11,27 @@
   "private_runtime_module_published": false,
   "model_session_private_contract": true,
   "combined_browser_private_exposure_allowed": false,
-  "live_combined_deployment_verified": true,
+  "live_combined_deployment_verified": false,
   "independently_qualified": false,
   "field_verified": false,
   "glow_5_star_qualified": false,
+  "identity_contract": {
+    "endpoint": "/system/identity",
+    "contract": "GLOW_RUNTIME_IDENTITY_V1",
+    "policy": "PLUGIN_URL_IS_ADAPTER_ONLY_BACKEND_IDENTITY_IS_AUTHORITATIVE",
+    "secrets_exposed": false,
+    "subject_exposed": false
+  },
   "plugin_binding": {
+    "plugin_id": "plugins_6abb7ec5911c81918121975d1e81bd0b",
     "name": "glow-education-single-domain",
-    "version": "1.1.0",
+    "adapter_version": "1.2.0",
+    "release_id": "pluginrel_6ac0bdbd4d2c81919372fd2d09187688",
     "mcp_path": "/mcp-v2",
-    "scope": "PRIVATE_USER"
+    "scope": "PRIVATE_USER",
+    "backend_version_owner": false
   },
   "browser_surface": "PUBLIC_DECLASSIFIED_PREVIEW_ONLY",
-  "full_factory_surface": "CHATGPT_MCP_WORK_LOOP"
+  "full_factory_surface": "CHATGPT_MCP_WORK_LOOP",
+  "next_gate": "REBIND_FACTORY_COMPONENT_LOCK_BUILD_COMBINED_ARTIFACT_REDEPLOY_AND_VERIFY_SYSTEM_IDENTITY"
 }
