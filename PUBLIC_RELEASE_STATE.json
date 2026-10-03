@@ -1,7 +1,7 @@
 {
   "product": "GLOW Education Host",
   "version": "0.2.0-candidate",
-  "state": "LIVE_COMBINED_DEPLOYMENT_VERIFIED_RUNTIME_IDENTITY_ACTIVE",
+  "state": "RUNTIME_IDENTITY_ACTIVE_LIVE_EVIDENCE_EXTERNALIZED",
   "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
   "browser_staging_ui": true,
@@ -11,29 +11,26 @@
   "private_runtime_module_published": false,
   "model_session_private_contract": true,
   "combined_browser_private_exposure_allowed": false,
-  "live_combined_deployment_verified": true,
+  "live_combined_deployment_verified": false,
+  "live_verification_authority": "FACTORY_EVIDENCE_FROM_RUNTIME_IDENTITY_ENDPOINT",
   "independently_qualified": false,
   "field_verified": false,
   "glow_5_star_qualified": false,
   "identity_contract": {
     "endpoint": "/system/identity",
     "contract": "GLOW_RUNTIME_IDENTITY_V1",
+    "assembly_contract": "GLOW_ASSEMBLY_IDENTITY_V1",
     "policy": "PLUGIN_URL_IS_ADAPTER_ONLY_BACKEND_IDENTITY_IS_AUTHORITATIVE",
+    "exact_deployed_component_identity_source": "LIVE_RUNTIME_ENDPOINT",
     "secrets_exposed": false,
     "subject_exposed": false
   },
-  "verified_live_topology": {
-    "backend_binding": "IN_PROCESS_COMBINED_RUNTIME",
-    "auth_provider": "SUPABASE_OAUTH",
+  "topology_contract": {
+    "backend_binding_expected": "IN_PROCESS_COMBINED_RUNTIME",
+    "auth_provider_expected": "SUPABASE_OAUTH",
     "mcp_path": "/mcp-v2",
-    "mission_store_mode": "postgres",
-    "durable_state_mode": "mysql",
-    "public_host_sha": "608abb7f372cdf72a7082ad20ed90b8297e970c0",
-    "private_factory_sha": "b5d2d6ba81a570807d1c943c4ab4fc13624ed6ec",
-    "capability_release": "GLOW_EDUCATION_CAPABILITY_SYSTEM_v0.10.3-rc13.zip",
-    "health_verified": true,
-    "readiness_verified": true,
-    "oauth_resource_metadata_verified": true
+    "mission_store_mode_expected": "postgres",
+    "durable_state_mode_expected": "mysql"
   },
   "plugin_binding": {
     "plugin_id": "plugins_6abb7ec5911c81918121975d1e81bd0b",
@@ -46,6 +43,6 @@
   },
   "browser_surface": "PUBLIC_DECLASSIFIED_PREVIEW_ONLY",
   "full_factory_surface": "CHATGPT_MCP_WORK_LOOP",
-  "claim_ceiling": "LIVE_COMBINED_RUNTIME_VERIFIED_NOT_PRODUCTION_QUALIFIED",
-  "next_gate": "CONTINUE_SOP_END_TO_END_QUALIFICATION_AND_PERSISTENCE_REPRODUCTION"
+  "claim_ceiling": "SOURCE_CONTRACT_READY_LIVE_STATE_MUST_BE_PROVEN_EXTERNALLY",
+  "next_gate": "FACTORY_BINDS_EXACT_HOST_SHA_COMBINED_CI_THEN_LIVE_IDENTITY_ACCEPTANCE"
 }
