@@ -1,8 +1,8 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "profile_id": "GLOW_EDUCATION_HOSTINGER_PUBLIC_OR_COMBINED",
-  "state": "LIVE_MISSION_CONTROL_CANDIDATE_REDEPLOY_REQUIRED",
-  "purpose": "Deploy the GLOW Education Public Host and OAuth-authenticated Mission Control on Hostinger managed Node.js hosting, with the private Factory runtime injected only through the authorized combined assembly.",
+  "state": "RUNTIME_IDENTITY_CONTRACT_READY_REDEPLOY_REQUIRED",
+  "purpose": "Deploy the GLOW Education Public Host and OAuth-authenticated Mission Control on Hostinger managed Node.js hosting, with the private Factory runtime injected only through the authorized combined assembly. The plugin is a thin adapter to the stable MCP URL; deployed backend identity is authoritative behind that URL.",
   "source": {
     "repository": "digitaltavi-source/GLOW-EDUCATION-HOST",
     "branch": "main"
@@ -14,28 +14,21 @@
     "start_command": "npm start",
     "health_path": "/healthz",
     "readiness_path": "/readyz",
+    "identity_path": "/system/identity",
     "browser_path": "/",
     "mcp_path": "/mcp-v2"
   },
   "deployment_modes": {
     "remote_protected_service": {
-      "required": [
-        "GLOW_PROTECTED_SERVICE_URL",
-        "GLOW_PROTECTED_SERVICE_TOKEN"
-      ],
+      "required": ["GLOW_PROTECTED_SERVICE_URL", "GLOW_PROTECTED_SERVICE_TOKEN"],
       "topology": "PUBLIC_HOST -> HTTPS_PROTECTED_SERVICE"
     },
     "combined_staging": {
-      "required": [
-        "GLOW_COMBINED_RUNTIME_MODULE",
-        "GLOW_AUTH_MODE",
-        "GLOW_OAUTH_ISSUER",
-        "GLOW_OAUTH_AUDIENCE",
-        "GLOW_OAUTH_JWKS_URL"
-      ],
+      "required": ["GLOW_COMBINED_RUNTIME_MODULE", "GLOW_AUTH_MODE", "GLOW_OAUTH_ISSUER", "GLOW_OAUTH_AUDIENCE", "GLOW_OAUTH_JWKS_URL"],
       "topology": "ONE_DOMAIN -> OAUTH MISSION CONTROL + CHATGPT MCP -> IN_PROCESS_PROTECTED_RUNTIME",
       "runtime_module_source": "PRIVATE_ASSEMBLY_ONLY",
-      "private_module_published_in_public_repo": false
+      "private_module_published_in_public_repo": false,
+      "runtime_identity_source": "BAKED_BY_PRIVATE_ASSEMBLY"
     }
   },
   "common_environment": [
@@ -46,6 +39,16 @@
     "GLOW_OAUTH_AUDIENCE",
     "GLOW_OAUTH_JWKS_URL"
   ],
+  "identity_contract": {
+    "endpoint": "/system/identity",
+    "public_contract": "GLOW_RUNTIME_IDENTITY_V1",
+    "assembly_contract": "GLOW_ASSEMBLY_IDENTITY_V1",
+    "plugin_is_backend_version_owner": false,
+    "backend_identity_is_authoritative": true,
+    "raw_environment_exposed": false,
+    "subject_exposed": false,
+    "secrets_exposed": false
+  },
   "security": {
     "public_repo_contains_private_factory_source": false,
     "private_runtime_path_hardcoded_in_public_repo": false,
@@ -56,9 +59,10 @@
   },
   "claims": {
     "host_build_verified": true,
+    "runtime_identity_contract_ci_verified": true,
     "combined_interface_verified": true,
     "live_hostinger_combined_deployment_verified": false,
     "production_qualified": false
   },
-  "next_gate": "REDEPLOY_DARKGREY_AND_VERIFY_OAUTH_MISSION_CONTROL"
+  "next_gate": "FACTORY_COMPONENT_REBIND_COMBINED_REVERIFY_HOSTINGER_REDEPLOY_THEN_VERIFY_SYSTEM_IDENTITY"
 }
