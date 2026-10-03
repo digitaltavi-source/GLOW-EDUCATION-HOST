@@ -26,25 +26,38 @@ function mcpPath(raw: string | undefined) {
   }
 }
 
+function loadIdentityFile(candidate: string): { source: string; value: StaticIdentity } | null {
+  if (!existsSync(candidate)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(candidate, "utf8"));
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return { source: candidate, value: parsed as StaticIdentity };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function loadStaticIdentity(env: NodeJS.ProcessEnv): { source: string; value: StaticIdentity } {
+  const explicitPath = env.GLOW_RUNTIME_IDENTITY_PATH?.trim();
+  if (explicitPath) {
+    return loadIdentityFile(explicitPath) ?? {
+      source: "UNDECLARED",
+      value: { state: "UNDECLARED", reason: "EXPLICIT_IDENTITY_PATH_UNAVAILABLE" }
+    };
+  }
+
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    env.GLOW_RUNTIME_IDENTITY_PATH?.trim(),
     path.resolve(moduleDir, "../../runtime-identity.json"),
     path.resolve(process.cwd(), "runtime-identity.json"),
     path.resolve(process.cwd(), "combined-runtime/public-host/runtime-identity.json")
-  ].filter((v): v is string => Boolean(v));
+  ];
 
   for (const candidate of candidates) {
-    if (!existsSync(candidate)) continue;
-    try {
-      const parsed = JSON.parse(readFileSync(candidate, "utf8"));
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return { source: candidate, value: parsed as StaticIdentity };
-      }
-    } catch {
-      continue;
-    }
+    const loaded = loadIdentityFile(candidate);
+    if (loaded) return loaded;
   }
 
   return { source: "UNDECLARED", value: { state: "UNDECLARED" } };
