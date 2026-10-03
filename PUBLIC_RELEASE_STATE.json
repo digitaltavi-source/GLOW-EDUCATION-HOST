@@ -1,7 +1,7 @@
 {
   "product": "GLOW Education Host",
   "version": "0.2.0-candidate",
-  "state": "RUNTIME_IDENTITY_ADDED_REDEPLOY_REVERIFY_REQUIRED",
+  "state": "LIVE_COMBINED_DEPLOYMENT_VERIFIED_RUNTIME_IDENTITY_ACTIVE",
   "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
   "browser_staging_ui": true,
@@ -11,7 +11,7 @@
   "private_runtime_module_published": false,
   "model_session_private_contract": true,
   "combined_browser_private_exposure_allowed": false,
-  "live_combined_deployment_verified": false,
+  "live_combined_deployment_verified": true,
   "independently_qualified": false,
   "field_verified": false,
   "glow_5_star_qualified": false,
@@ -21,6 +21,19 @@
     "policy": "PLUGIN_URL_IS_ADAPTER_ONLY_BACKEND_IDENTITY_IS_AUTHORITATIVE",
     "secrets_exposed": false,
     "subject_exposed": false
+  },
+  "verified_live_topology": {
+    "backend_binding": "IN_PROCESS_COMBINED_RUNTIME",
+    "auth_provider": "SUPABASE_OAUTH",
+    "mcp_path": "/mcp-v2",
+    "mission_store_mode": "postgres",
+    "durable_state_mode": "mysql",
+    "public_host_sha": "608abb7f372cdf72a7082ad20ed90b8297e970c0",
+    "private_factory_sha": "b5d2d6ba81a570807d1c943c4ab4fc13624ed6ec",
+    "capability_release": "GLOW_EDUCATION_CAPABILITY_SYSTEM_v0.10.3-rc13.zip",
+    "health_verified": true,
+    "readiness_verified": true,
+    "oauth_resource_metadata_verified": true
   },
   "plugin_binding": {
     "plugin_id": "plugins_6abb7ec5911c81918121975d1e81bd0b",
@@ -33,5 +46,6 @@
   },
   "browser_surface": "PUBLIC_DECLASSIFIED_PREVIEW_ONLY",
   "full_factory_surface": "CHATGPT_MCP_WORK_LOOP",
-  "next_gate": "REBIND_FACTORY_COMPONENT_LOCK_BUILD_COMBINED_ARTIFACT_REDEPLOY_AND_VERIFY_SYSTEM_IDENTITY"
+  "claim_ceiling": "LIVE_COMBINED_RUNTIME_VERIFIED_NOT_PRODUCTION_QUALIFIED",
+  "next_gate": "CONTINUE_SOP_END_TO_END_QUALIFICATION_AND_PERSISTENCE_REPRODUCTION"
 }
