@@ -23,33 +23,20 @@
 <div class="brand"><div class="logo">G</div><div><strong>GLOW Education</strong><div class="muted">Mission Control · Protected Factory</div></div></div>
 <span class="badge">Live Demo · OAuth</span>
 </header>
-
 <section class="panel hero">
 <div class="eyebrow">GLOW Education Factory</div>
 <h1>Gửi yêu cầu. Theo dõi Factory. Duyệt đúng gate.</h1>
 <p>Đây là cổng điều khiển mission thật. Web chỉ hiển thị dữ liệu <strong>PUBLIC_DECLASSIFIED</strong>; private reasoning work vẫn được xử lý qua ChatGPT + @GLOW Education để không lộ Capability/Factory internals.</p>
 </section>
-
 <section class="grid">
 <div class="panel card">
 <h2>1. Đăng nhập</h2>
 <p>Dùng email tài khoản được phép truy cập GLOW Education.</p>
-<div id="authPanel" class="authbox">
-<label for="email">Email</label>
-<input id="email" type="email" autocomplete="email" placeholder="you@example.com">
-<div class="actions"><button id="signin" class="primary">Gửi liên kết đăng nhập</button></div>
-</div>
-<div id="userPanel" class="authbox hidden">
-<div><strong>Đã đăng nhập:</strong> <span id="userEmail"></span></div>
-<div class="actions"><button id="signout" class="ghost">Đăng xuất</button></div>
-</div>
+<div id="authPanel" class="authbox"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com"><div class="actions"><button id="signin" class="primary">Gửi liên kết đăng nhập</button></div></div>
+<div id="userPanel" class="authbox hidden"><div><strong>Đã đăng nhập:</strong> <span id="userEmail"></span></div><div class="actions"><button id="signout" class="ghost">Đăng xuất</button></div></div>
 <div id="authStatus" class="auth-status">Đang kiểm tra phiên đăng nhập…</div>
-
-<div class="notice">
-<strong>Kiến trúc vận hành:</strong> Web tạo/điều khiển mission và approval. Khi Factory trả <code>get_work</code>, ChatGPT plugin thực thi reasoning package riêng tư rồi trả lại Factory.
+<div class="notice"><strong>Kiến trúc vận hành:</strong> Web tạo/điều khiển mission và approval. Khi Factory trả <code>get_work</code>, ChatGPT plugin thực thi reasoning package riêng tư rồi trả lại Factory.</div>
 </div>
-</div>
-
 <div class="panel card">
 <h2>2. Tạo learning mission</h2>
 <p>Bạn có thể gõ yêu cầu tự nhiên; các trường bên dưới chỉ giúp Factory hiểu rõ hơn.</p>
@@ -66,28 +53,42 @@
 <div class="actions"><button class="primary" id="startMission">Tạo mission thật</button></div>
 </div>
 </section>
-
 <section class="panel workspace" id="workspace">
-<div class="workspace-head">
-<div><h2 style="margin:0">Mission Workspace</h2><div class="muted" id="missionLabel">Chưa có mission đang mở.</div></div>
-<span class="badge" id="stateBadge">IDLE</span>
-</div>
+<div class="workspace-head"><div><h2 style="margin:0">Mission Workspace</h2><div class="muted" id="missionLabel">Chưa có mission đang mở.</div></div><span class="badge" id="stateBadge">IDLE</span></div>
 <div class="phase"><span class="pill">H1 · Understanding</span><span class="pill">H2 · Blueprint</span><span class="pill">H3 · Production</span><span class="pill">Approval</span><span class="pill">Delivery</span></div>
 <div class="actions">
 <button class="secondary" id="refresh" disabled>Cập nhật ngay</button>
 <button class="ghost" id="delivery" disabled>Xem delivery</button>
-<button class="primary" id="continueChatgpt" disabled>Tiếp tục trong GLOW Education</button>
+<button class="primary" id="continueChatgpt" disabled>Cài/Mở GLOW Education</button>
+<button class="ghost" id="copyMissionLink" disabled>Sao chép link tiếp tục</button>
+<button class="ghost" id="copyPluginLink">Sao chép link cài plugin</button>
 </div>
-<div id="handoffHint" class="notice hidden"><strong>Đang chờ reasoning:</strong> nút “Tiếp tục trong GLOW Education” sẽ sao chép lệnh có đúng Mission ID rồi mở plugin. Bạn không cần nhập lại yêu cầu đã điền trên web.</div>
-<div id="approvalPanel" class="approval hidden">
-<strong>Factory đang chờ quyết định của bạn</strong>
-<pre id="approvalSummary"></pre>
-<div class="actions"><button id="approve" class="primary" disabled>APPROVE</button><button id="reject" class="danger" disabled>REJECT</button></div>
-</div>
+<div id="handoffHint" class="notice hidden"><strong>Đang chờ reasoning:</strong> “Cài/Mở GLOW Education” sẽ mở đúng trang plugin và sao chép lệnh có Mission ID. Nếu tài khoản chưa cài plugin nhưng có quyền truy cập, ChatGPT sẽ yêu cầu <strong>Install plugin</strong> trước. “Sao chép link tiếp tục” dùng để gửi đúng mission cho người dùng khác.</div>
+<div id="approvalPanel" class="approval hidden"><strong>Factory đang chờ quyết định của bạn</strong><pre id="approvalSummary"></pre><div class="actions"><button id="approve" class="primary" disabled>APPROVE</button><button id="reject" class="danger" disabled>REJECT</button></div></div>
 <div class="result" id="result">Đăng nhập và tạo mission để bắt đầu.</div>
 <details class="technical"><summary>Chi tiết kỹ thuật (JSON)</summary><pre id="technical">Chưa có dữ liệu kỹ thuật.</pre></details>
 </section>
 </div>
+<script>
+(function(){
+  const m=new URL(window.location.href).searchParams.get('mission');
+  if(m && /^M-[A-Za-z0-9_-]+$/.test(m)) sessionStorage.setItem('glowMissionId',m);
+})();
+</script>
 <script src="/web-client.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  const pluginUrl='https://chatgpt.com/plugins/plugins_6abb7ec5911c81918121975d1e81bd0b';
+  const mission=()=>sessionStorage.getItem('glowMissionId')||'';
+  const missionUrl=()=>{const u=new URL(window.location.origin+'/');if(mission())u.searchParams.set('mission',mission());return u.toString();};
+  const copy=async(text,msg)=>{try{await navigator.clipboard.writeText(text);const r=document.getElementById('result');if(r){r.textContent=msg;r.setAttribute('data-kind','success');}}catch{prompt('Sao chép liên kết này:',text);}};
+  const missionBtn=document.getElementById('copyMissionLink');
+  const pluginBtn=document.getElementById('copyPluginLink');
+  if(missionBtn){missionBtn.disabled=!mission();missionBtn.addEventListener('click',()=>copy(missionUrl(),'✅ Đã sao chép link tiếp tục của mission hiện tại.'));}
+  if(pluginBtn){pluginBtn.addEventListener('click',()=>copy(pluginUrl,'✅ Đã sao chép link cài/mở GLOW Education.'));}
+  const observer=new MutationObserver(()=>{if(missionBtn)missionBtn.disabled=!mission();});
+  observer.observe(document.getElementById('missionLabel')||document.body,{childList:true,subtree:true});
+});
+</script>
 </body>
 </html>
