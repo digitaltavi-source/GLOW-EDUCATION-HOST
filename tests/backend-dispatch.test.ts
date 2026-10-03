@@ -80,6 +80,93 @@ test("PRIVATE WORK: combined MCP path propagates subject and preserves MODEL_SES
   }
 });
 
+test("IDENTITY HANDOFF: same subject may continue a web-originated mission; different subject is blocked", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "glow-identity-handoff-"));
+  const modulePath = path.join(dir, "runtime.mjs");
+  await writeFile(modulePath, `
+    let owner = null;
+    const missionId = "M-WEB-HANDOFF";
+    export async function createGlowCombinedRuntime() {
+      return {
+        async execute(subject, raw) {
+          if (raw.operation === "create_learning_experience") {
+            owner = subject;
+            return {
+              request_id: raw.request_id,
+              status: "accepted",
+              exposure: "PUBLIC_DECLASSIFIED",
+              result: { mission_id: missionId, state: "H1_WORKING", stage: "H1", next_action: "get_work" },
+              public_evidence: [],
+              errors: []
+            };
+          }
+          if (raw.input?.mission_id === missionId && subject !== owner) {
+            return {
+              request_id: raw.request_id,
+              status: "failed",
+              exposure: "PUBLIC_DECLASSIFIED",
+              result: null,
+              public_evidence: [],
+              errors: [{ code: "MISSION_SUBJECT_MISMATCH", message: "MISSION_SUBJECT_MISMATCH", retryable: false }]
+            };
+          }
+          if (raw.operation === "get_work") {
+            return {
+              request_id: raw.request_id,
+              status: "accepted",
+              exposure: "MODEL_SESSION_PRIVATE",
+              result: { state: "H1_WORKING", stage: "H1", work: { kind: "CAPABILITY_SCREENING", work_token: "handoff-token" } },
+              public_evidence: [],
+              errors: []
+            };
+          }
+          return {
+            request_id: raw.request_id,
+            status: "accepted",
+            exposure: "PUBLIC_DECLASSIFIED",
+            result: { mission_id: missionId, state: "H1_WORKING", stage: "H1", next_action: "get_work" },
+            public_evidence: [],
+            errors: []
+          };
+        }
+      };
+    }
+  `);
+  try {
+    const config: HostConfig = { combinedRuntimeModule: pathToFileURL(modulePath).href, port: 3000 };
+    const created = await callConfiguredService(config, "shared-subject", {
+      request_id: "web-create",
+      operation: "create_learning_experience",
+      role: "teacher",
+      locale: "vi-VN",
+      input: { topic: "identity-handoff" }
+    });
+    assert.equal(created.result?.mission_id, "M-WEB-HANDOFF");
+
+    const continued = await callConfiguredService(config, "shared-subject", {
+      request_id: "plugin-get-work",
+      operation: "get_work",
+      role: "teacher",
+      locale: "vi-VN",
+      input: { mission_id: "M-WEB-HANDOFF" }
+    });
+    assert.equal(continued.exposure, "MODEL_SESSION_PRIVATE");
+    assert.equal(continued.status, "accepted");
+
+    const takeover = await callConfiguredService(config, "other-subject", {
+      request_id: "plugin-takeover",
+      operation: "get_status",
+      role: "teacher",
+      locale: "vi-VN",
+      input: { mission_id: "M-WEB-HANDOFF" }
+    });
+    assert.equal(takeover.status, "failed");
+    assert.equal(takeover.errors[0]?.code, "MISSION_SUBJECT_MISMATCH");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("FAILURE: remote mode without protected service fails closed", async () => {
   const config: HostConfig = { port: 3000 };
   await assert.rejects(
