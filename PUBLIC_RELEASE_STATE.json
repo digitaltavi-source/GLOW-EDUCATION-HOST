@@ -29,7 +29,7 @@
     "backend_binding_expected": "IN_PROCESS_COMBINED_RUNTIME",
     "auth_provider_expected": "SUPABASE_OAUTH",
     "mcp_path": "/mcp-v2",
-    "mission_store_mode_expected": "postgres",
+    "mission_store_mode_expected": "sqlite",
     "durable_state_mode_expected": "mysql"
   },
   "plugin_binding": {

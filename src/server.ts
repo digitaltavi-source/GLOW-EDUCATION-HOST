@@ -56,28 +56,23 @@ async function invokeCombinedPreview(
   return callCombinedPreviewService(config, request);
 }
 
-const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp`);
-const publicAuthorizationServerBase = process.env.GLOW_PUBLIC_AUTHORIZATION_SERVER?.trim() || configuredMcpServerUrl.origin;
+const configuredMcpServerUrl = new URL(process.env.GLOW_PUBLIC_MCP_URL ?? `http://127.0.0.1:${config.port}/mcp-v2`);
+if (configuredMcpServerUrl.pathname !== "/mcp-v2") throw new Error("CONFIG_PUBLIC_MCP_PATH_MUST_BE_MCP_V2");
+
 const explicitAuthMode = process.env.GLOW_AUTH_MODE?.trim().toLowerCase();
 const configuredAuthMode = explicitAuthMode || (config.combinedRuntimeModule ? "staging_disabled" : "oauth");
-const authMode = configuredAuthMode === "static_bearer" ? "hybrid" : configuredAuthMode;
-const supabaseOAuthConfig = {
-  issuer: process.env.GLOW_OAUTH_ISSUER?.trim() || "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
-  audience: process.env.GLOW_OAUTH_AUDIENCE?.trim() || "authenticated",
-  jwksUrl: process.env.GLOW_OAUTH_JWKS_URL?.trim() || "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/.well-known/jwks.json"
-};
-const oauthConfig = authMode === "oauth"
-  ? loadOAuthConfig()
-  : authMode === "hybrid"
-    ? supabaseOAuthConfig
-    : null;
-const requiredScopes = authMode === "legacy_static"
+const allowedAuthModes = new Set(["oauth","static_bearer","hybrid","legacy_static","staging_disabled"]);
+if (!allowedAuthModes.has(configuredAuthMode)) throw new Error("CONFIG_AUTH_MODE_INVALID");
+const authMode = configuredAuthMode;
+const oauthConfig = authMode === "oauth" || authMode === "hybrid" ? loadOAuthConfig() : null;
+const staticBearerMode = authMode === "static_bearer" || authMode === "legacy_static";
+const requiredScopes = staticBearerMode
   ? ["education.run"]
   : authMode === "staging_disabled"
     ? []
     : (process.env.GLOW_OAUTH_REQUIRED_SCOPES ?? "email")
         .split(/\s+/).map(v=>v.trim()).filter(Boolean);
-const verifier = authMode === "legacy_static"
+const verifier = staticBearerMode
   ? createStaticBearerVerifier(loadStaticBearerConfig())
   : authMode === "hybrid"
     ? createHybridVerifier({
@@ -88,7 +83,7 @@ const verifier = authMode === "legacy_static"
     : authMode === "staging_disabled"
       ? createRejectAllVerifier()
       : createJwtVerifier(oauthConfig!);
-const toolSecuritySchemes = authMode === "legacy_static" || authMode === "staging_disabled"
+const toolSecuritySchemes = staticBearerMode || authMode === "staging_disabled"
   ? undefined
   : [{ type: "oauth2" as const, scopes: requiredScopes }];
 
@@ -426,41 +421,13 @@ const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(mcpServerUrl);
 const resourceMetadata = buildProtectedResourceMetadata({
   resource:mcpServerUrl.toString(),
   authMode,
-  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
+  oauthIssuer: oauthConfig?.issuer ?? null,
   scopes:requiredScopes
 });
 const auth = requireBearerAuth({
   verifier,
   requiredScopes,
   resourceMetadataUrl
-});
-
-const mcpV2ServerUrl = new URL("/mcp-v2", mcpServerUrl.origin);
-const resourceMetadataV2Url = getOAuthProtectedResourceMetadataUrl(mcpV2ServerUrl);
-const resourceMetadataV2 = buildProtectedResourceMetadata({
-  resource:mcpV2ServerUrl.toString(),
-  authMode,
-  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
-  scopes:requiredScopes
-});
-const authV2 = requireBearerAuth({
-  verifier,
-  requiredScopes,
-  resourceMetadataUrl: resourceMetadataV2Url
-});
-
-const mcpV3ServerUrl = new URL("/mcp-v3", mcpServerUrl.origin);
-const resourceMetadataV3Url = getOAuthProtectedResourceMetadataUrl(mcpV3ServerUrl);
-const resourceMetadataV3 = buildProtectedResourceMetadata({
-  resource:mcpV3ServerUrl.toString(),
-  authMode,
-  oauthIssuer:(authMode === "legacy_static" || authMode === "staging_disabled") ? null : "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1",
-  scopes:requiredScopes
-});
-const authV3 = requireBearerAuth({
-  verifier,
-  requiredScopes,
-  resourceMetadataUrl: resourceMetadataV3Url
 });
 
 const node = toNodeHandler(handler);
@@ -470,26 +437,17 @@ app.get(resourceMetadataPath, (_req,res) => {
   res.json(resourceMetadata);
 });
 
-const resourceMetadataV2Path = new URL(resourceMetadataV2Url).pathname;
-app.get(resourceMetadataV2Path, (_req,res) => {
-  res.json(resourceMetadataV2);
-});
-
-const resourceMetadataV3Path = new URL(resourceMetadataV3Url).pathname;
-app.get(resourceMetadataV3Path, (_req,res) => {
-  res.json(resourceMetadataV3);
-});
-
 app.get("/.well-known/oauth-authorization-server", (_req,res) => {
-  if (authMode === "staging_disabled") {
-    return res.status(503).json({error:"MCP_DISABLED_IN_STAGING"});
+  if (!oauthConfig) {
+    return res.status(503).json({error: authMode === "staging_disabled" ? "MCP_DISABLED_IN_STAGING" : "OAUTH_DISABLED_FOR_AUTH_MODE"});
   }
+  const issuer = oauthConfig.issuer.replace(/\/$/, "");
   res.json({
-    issuer: publicAuthorizationServerBase,
-    authorization_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/authorize",
-    token_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/token",
-    registration_endpoint: "https://rjllafrkmwijvqojmdsd.supabase.co/auth/v1/oauth/clients/register",
-    scopes_supported: ["email","profile","openid"],
+    issuer,
+    authorization_endpoint: `${issuer}/oauth/authorize`,
+    token_endpoint: `${issuer}/oauth/token`,
+    registration_endpoint: `${issuer}/oauth/clients/register`,
+    scopes_supported: [...new Set(["openid","email","profile",...requiredScopes])],
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code","refresh_token"],
     token_endpoint_auth_methods_supported: ["none","client_secret_post","client_secret_basic"],
@@ -510,13 +468,16 @@ app.get("/results", (_req,res) => {
 });
 
 app.get("/api/staging/profile", (_req,res) => {
+  const backend = publicBackendIdentity();
   res.json({
     product:"GLOW Education Host",
     mode:"COMBINED_STAGING",
     combined_runtime: Boolean(config.combinedRuntimeModule),
     staging_ui_enabled: Boolean(config.stagingUiEnabled),
     authentication: config.stagingUiEnabled ? "ACCESS_CODE_REQUIRED" : "DISABLED",
-    claim_ceiling:"SUPERVISED_LIVE_DEMO_VERIFIED_NOT_PRODUCTION"
+    backend_identity: backend.assembly_id,
+    backend_state: backend.assembly_state,
+    claim_ceiling:"SUPERVISED_DEMO_CANDIDATE_NOT_PRODUCTION_QUALIFIED"
   });
 });
 
@@ -713,9 +674,7 @@ app.get("/readyz", async (_req,res) => {
   });
 });
 
-app.all("/mcp",auth,(req,res)=>void node(req,res,req.body));
-app.all("/mcp-v2",authV2,(req,res)=>void node(req,res,req.body));
-app.all("/mcp-v3",authV3,(req,res)=>void node(req,res,req.body));
+app.all("/mcp-v2",auth,(req,res)=>void node(req,res,req.body));
 
 app.listen(config.port,()=>{
   console.error(`GLOW Education public host listening on :${config.port}`);

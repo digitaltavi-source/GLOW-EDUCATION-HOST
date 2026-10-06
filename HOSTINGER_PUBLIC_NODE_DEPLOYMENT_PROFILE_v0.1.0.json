@@ -10,7 +10,7 @@
   "runtime": {
     "node_version": "22.x",
     "repository_root": ".",
-    "build_command": "npm install --ignore-scripts --no-audit --no-fund && npm run build",
+    "build_command": "npm ci --ignore-scripts --no-audit --no-fund && npm run build",
     "start_command": "npm start",
     "health_path": "/healthz",
     "readiness_path": "/readyz",
@@ -37,7 +37,8 @@
     "GLOW_AUTH_MODE",
     "GLOW_OAUTH_ISSUER",
     "GLOW_OAUTH_AUDIENCE",
-    "GLOW_OAUTH_JWKS_URL"
+    "GLOW_OAUTH_JWKS_URL",
+    "GLOW_OAUTH_REQUIRED_SCOPES"
   ],
   "identity_contract": {
     "endpoint": "/system/identity",
@@ -54,7 +55,7 @@
     "backend_binding_expected": "IN_PROCESS_COMBINED_RUNTIME",
     "auth_provider_expected": "SUPABASE_OAUTH",
     "mcp_path": "/mcp-v2",
-    "mission_store_mode_expected": "postgres",
+    "mission_store_mode_expected": "sqlite",
     "durable_state_mode_expected": "mysql"
   },
   "security": {
