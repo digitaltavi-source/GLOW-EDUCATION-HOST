@@ -75,13 +75,15 @@ See [SECURITY_BOUNDARY.md](SECURITY_BOUNDARY.md) and [docs/ARCHITECTURE.md](docs
 
 ## Current state
 
-`V2_SUCCESSOR_ASSEMBLY_NODE22_CI_VERIFIED_AWAITING_LIVE_REDEPLOY`
+`PUBLIC_HOST_SOURCE_CONTRACT_READY`
 
-The public Host component remains compatible with the stable one-domain MCP/OAuth topology. A new GLOW Education V2 successor combined assembly has passed Node 22 integration CI, including exact component identity, public-host regression, the governed MCP work-loop regression, NORMAL/FAILURE/ADVERSARIAL/RECOVERY testing, full HTTP acceptance, private-implementation leak scanning and secret scanning.
+This repository publishes the stable public adapter contract and staging surface for GLOW Education. The V2 successor Factory is integrated and qualified separately inside the protected Factory assembly; exact assembly identity, deployment state and live acceptance are intentionally **not** owned by this public repository.
 
-That new V2 successor runtime has **not yet been reverified live on the Hostinger deployment**. Earlier live evidence belongs to the prior deployed runtime identity and does not automatically transfer to the new candidate. A same-URL redeploy plus fresh `/system/identity` and controlled MCP mission acceptance is the next live gate.
+For any exact claim about what is currently assembled or deployed, the authority is the protected Factory component lock/evidence together with the live `/system/identity` endpoint. Updating this public README must never manufacture or transfer a live/qualification claim.
 
-This public state does not imply production qualification, independent qualification, field verification or human release authorization.
+The next integration gate is therefore: bind the exact current Public Host SHA inside the protected Factory assembly, rerun combined Node 22 CI, then perform a same-URL Hostinger redeploy and fresh live identity + controlled MCP acceptance.
+
+This public source state does not imply production qualification, independent qualification, field verification or human release authorization.
 
 ## Local development
 
