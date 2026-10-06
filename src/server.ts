@@ -10,6 +10,7 @@ import { loadConfig } from "./config.js";
 import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStaticBearerVerifier, createHybridVerifier, createRejectAllVerifier } from "./oauth.js";
 import { callConfiguredService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
+import { mapSubmitWorkInput } from "./tool-mapping.js";
 import { classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 import { createGlowMcpExpressApp } from "./mcp-app.js";
@@ -295,7 +296,7 @@ const buildServer: McpServerFactory = ctx => {
       })
     },
     async ({mission_id,work_token,result,role,locale}) => {
-      try { return toolResult(await invoke(ctx,"submit_work",role,locale,{mission_id,work_token,result}) as unknown as Record<string,unknown>); }
+      try { return toolResult(await invoke(ctx,"submit_work",role,locale,mapSubmitWorkInput(mission_id,work_token,result)) as unknown as Record<string,unknown>); }
       catch(error){ return toolError(error instanceof Error?error.message:"HOST_REQUEST_FAILED"); }
     }
   );
