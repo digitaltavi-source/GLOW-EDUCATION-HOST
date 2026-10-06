@@ -63,6 +63,18 @@ function loadStaticIdentity(env: NodeJS.ProcessEnv): { source: string; value: St
   return { source: "UNDECLARED", value: { state: "UNDECLARED" } };
 }
 
+function staticString(value: StaticIdentity, key: string) {
+  const raw = value[key];
+  return typeof raw === "string" && raw.trim() ? raw.trim().slice(0, 160) : "UNDECLARED";
+}
+
+function configState(expected: string, configured: string) {
+  if (expected === "UNDECLARED" && configured === "UNDECLARED") return "UNDECLARED";
+  if (expected === "UNDECLARED") return "CONFIG_ONLY";
+  if (configured === "UNDECLARED") return "ASSEMBLY_ONLY";
+  return expected === configured ? "MATCH" : "CONFLICT";
+}
+
 export function loadRuntimeIdentity(env: NodeJS.ProcessEnv = process.env) {
   const staticIdentity = loadStaticIdentity(env);
   const authHost = issuerHost(env.GLOW_OAUTH_ISSUER);
@@ -71,6 +83,10 @@ export function loadRuntimeIdentity(env: NodeJS.ProcessEnv = process.env) {
     : env.GLOW_PROTECTED_SERVICE_URL?.trim()
       ? "REMOTE_PROTECTED_SERVICE"
       : "UNDECLARED";
+  const assemblyMissionStore = staticString(staticIdentity.value, "mission_store_mode");
+  const assemblyDurableState = staticString(staticIdentity.value, "durable_state_mode");
+  const configuredMissionStore = cleanValue(env.GLOW_MISSION_STORE);
+  const configuredDurableState = cleanValue(env.GLOW_DURABLE_STATE_MODE);
 
   return {
     contract: "GLOW_RUNTIME_IDENTITY_V1",
@@ -83,8 +99,10 @@ export function loadRuntimeIdentity(env: NodeJS.ProcessEnv = process.env) {
       auth_provider: authHost.endsWith("supabase.co") ? "SUPABASE_OAUTH" : "EXTERNAL_OR_UNDECLARED",
       auth_issuer_host: authHost,
       mcp_path: mcpPath(env.GLOW_PUBLIC_MCP_URL),
-      mission_store_mode: cleanValue(env.GLOW_MISSION_STORE),
-      durable_state_mode: cleanValue(env.GLOW_DURABLE_STATE_MODE),
+      mission_store_mode: assemblyMissionStore !== "UNDECLARED" ? assemblyMissionStore : configuredMissionStore,
+      mission_store_config_state: configState(assemblyMissionStore, configuredMissionStore),
+      durable_state_mode: assemblyDurableState !== "UNDECLARED" ? assemblyDurableState : configuredDurableState,
+      durable_state_config_state: configState(assemblyDurableState, configuredDurableState),
       combined_runtime_module_configured: Boolean(env.GLOW_COMBINED_RUNTIME_MODULE?.trim()),
       node_version: process.version
     },

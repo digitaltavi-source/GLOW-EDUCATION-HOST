@@ -14,9 +14,20 @@ import { mapSubmitWorkInput } from "./tool-mapping.js";
 import { classifyRecoveryResponse, classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 import { createGlowMcpExpressApp } from "./mcp-app.js";
+import { loadRuntimeIdentity } from "./runtime-identity.js";
 
 const config = loadConfig();
+const PUBLIC_HOST_ADAPTER_VERSION = "0.3.0";
 const stagingAccessCode = process.env.GLOW_STAGING_ACCESS_CODE?.trim() || "";
+
+function publicBackendIdentity() {
+  const identity = loadRuntimeIdentity();
+  const assembly = identity.assembly as Record<string, unknown>;
+  return {
+    assembly_id: typeof assembly.assembly_id === "string" ? assembly.assembly_id : "UNDECLARED",
+    assembly_state: typeof assembly.assembly_state === "string" ? assembly.assembly_state : "UNDECLARED"
+  };
+}
 
 function safeEqualSecret(received: string, expected: string) {
   const a = Buffer.from(received);
@@ -154,7 +165,7 @@ async function invokeWeb(
 
 const buildServer: McpServerFactory = ctx => {
   const server = new McpServer(
-    { name: "glow-education", version: "0.2.0" },
+    { name: "glow-education", version: PUBLIC_HOST_ADAPTER_VERSION },
     {
       instructions:
         "Use GLOW Education only for the user's explicit learning request. ChatGPT is the reasoning/intelligence host. The backend owns Factory state, Kit sequencing, validation, approval binding, freeze/admission, evidence and delivery boundaries. When a work package is returned, perform only that bounded work, then submit the result. Never invent success, approvals, evidence, or Factory state."
@@ -169,11 +180,17 @@ const buildServer: McpServerFactory = ctx => {
       annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
       inputSchema: z.object({})
     },
-    async () => toolResult({
-      product: "GLOW Education",
-      version: "0.2.0-live-demo",
-      status: "LIVE_DEMO_WORK_LOOP_VERIFIED_NOT_PRODUCTION"
-    })
+    async () => {
+      const backend = publicBackendIdentity();
+      return toolResult({
+        product: "GLOW Education",
+        version: backend.assembly_id,
+        backend_identity: backend.assembly_id,
+        backend_state: backend.assembly_state,
+        adapter_version: PUBLIC_HOST_ADAPTER_VERSION,
+        status: "SUPERVISED_DEMO_CANDIDATE_NOT_PRODUCTION_QUALIFIED"
+      });
+    }
   );
 
   server.registerTool(
@@ -268,7 +285,7 @@ const buildServer: McpServerFactory = ctx => {
     async ({mission_id,role,locale}) => {
       try {
         const out=await invoke(ctx,"recover_blocked_stage",role,locale,{mission_id});
-        const classification=classifyWorkResponse(out);
+        const classification=classifyRecoveryResponse(out);
         if(classification==="SAFE_PUBLIC_FAILURE"){
           return {
             isError:true,
@@ -659,10 +676,14 @@ button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:point
 });
 
 app.get("/healthz", (_req,res) => {
+  const backend = publicBackendIdentity();
   res.json({
     ok:true,
     product:"GLOW Education",
-    version:"0.2.0-live-demo",
+    version:backend.assembly_id,
+    backend_identity:backend.assembly_id,
+    backend_state:backend.assembly_state,
+    adapter_version:PUBLIC_HOST_ADAPTER_VERSION,
     mode:config.combinedRuntimeModule ? "COMBINED_STAGING" : "REMOTE_PROTECTED_SERVICE",
     mcp:authMode === "staging_disabled" ? "DISABLED" : "ENABLED"
   });
