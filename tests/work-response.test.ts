@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyWorkResponse } from "../src/work-response.js";
+import { classifyRecoveryResponse, classifyWorkResponse } from "../src/work-response.js";
 
 test("work exposure: accepts private work package", () => {
   assert.equal(classifyWorkResponse({status:"accepted",exposure:"MODEL_SESSION_PRIVATE"}),"PRIVATE_WORK");
@@ -34,5 +34,20 @@ test("work exposure: rejects unexpected successful public response", () => {
   assert.throws(
     () => classifyWorkResponse({status:"accepted",exposure:"PUBLIC_DECLASSIFIED"}),
     /WORK_EXPOSURE_INVALID/
+  );
+});
+
+test("recovery exposure: accepts bounded public success", () => {
+  assert.equal(classifyRecoveryResponse({status:"accepted",exposure:"PUBLIC_DECLASSIFIED"}),"SAFE_PUBLIC_SUCCESS");
+});
+
+test("recovery exposure: preserves bounded public failure", () => {
+  assert.equal(classifyRecoveryResponse({status:"failed",exposure:"PUBLIC_DECLASSIFIED"}),"SAFE_PUBLIC_FAILURE");
+});
+
+test("recovery exposure: rejects private success", () => {
+  assert.throws(
+    () => classifyRecoveryResponse({status:"accepted",exposure:"MODEL_SESSION_PRIVATE"}),
+    /RECOVERY_EXPOSURE_INVALID/
   );
 });

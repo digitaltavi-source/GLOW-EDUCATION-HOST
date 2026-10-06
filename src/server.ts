@@ -11,7 +11,7 @@ import { loadOAuthConfig, loadStaticBearerConfig, createJwtVerifier, createStati
 import { callConfiguredService, checkProtectedReadiness, callCombinedPreviewService, checkCombinedPreviewReadiness } from "./backend.js";
 import { LearningRequest } from "./contracts.js";
 import { mapSubmitWorkInput } from "./tool-mapping.js";
-import { classifyWorkResponse } from "./work-response.js";
+import { classifyRecoveryResponse, classifyWorkResponse } from "./work-response.js";
 import { buildProtectedResourceMetadata } from "./resource-metadata.js";
 import { createGlowMcpExpressApp } from "./mcp-app.js";
 
