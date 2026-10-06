@@ -1,7 +1,7 @@
 {
   "product": "GLOW Education Host",
-  "version": "0.2.0-candidate",
-  "state": "RUNTIME_IDENTITY_ACTIVE_LIVE_EVIDENCE_EXTERNALIZED",
+  "version": "0.3.0-candidate",
+  "state": "V2_SUCCESSOR_ASSEMBLY_NODE22_CI_VERIFIED_AWAITING_LIVE_REDEPLOY",
   "repository_role": "PUBLIC_HOST_ADAPTER",
   "primary_host": "ChatGPT",
   "browser_staging_ui": true,
@@ -11,7 +11,8 @@
   "private_runtime_module_published": false,
   "model_session_private_contract": true,
   "combined_browser_private_exposure_allowed": false,
-  "live_combined_deployment_verified": false,
+  "current_v2_successor_live_combined_deployment_verified": false,
+  "prior_runtime_live_evidence_transfer_allowed": false,
   "live_verification_authority": "FACTORY_EVIDENCE_FROM_RUNTIME_IDENTITY_ENDPOINT",
   "independently_qualified": false,
   "field_verified": false,
@@ -43,6 +44,12 @@
   },
   "browser_surface": "PUBLIC_DECLASSIFIED_PREVIEW_ONLY",
   "full_factory_surface": "CHATGPT_MCP_WORK_LOOP",
-  "claim_ceiling": "SOURCE_CONTRACT_READY_LIVE_STATE_MUST_BE_PROVEN_EXTERNALLY",
-  "next_gate": "FACTORY_BINDS_EXACT_HOST_SHA_COMBINED_CI_THEN_LIVE_IDENTITY_ACCEPTANCE"
+  "verified_private_assembly_evidence": {
+    "workflow": "education-combined-staging-ci",
+    "run_id": 37435567529,
+    "node_runtime": "22",
+    "result": "PASS"
+  },
+  "claim_ceiling": "V2_SUCCESSOR_COMBINED_ASSEMBLY_NODE22_CI_VERIFIED_NOT_LIVE",
+  "next_gate": "SAME_URL_HOSTINGER_REDEPLOY_THEN_LIVE_IDENTITY_AND_CONTROLLED_MCP_ACCEPTANCE"
 }

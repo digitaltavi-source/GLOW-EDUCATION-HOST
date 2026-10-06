@@ -1,4 +1,4 @@
-name: host-ci
+﻿name: host-ci
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
           node-version: "22"
 
       - name: Install
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Build public host and staging UI
         run: npm run build
@@ -66,7 +66,7 @@ jobs:
           curl -fsS http://127.0.0.1:3191/oauth-client.js >/tmp/oauth-client.js
           curl -fsS http://127.0.0.1:3191/web-client.js >/tmp/web-client.js
           grep -q "Mission Control" /tmp/host-root.html
-          grep -q "Tạo mission thật" /tmp/host-root.html
+          grep -q "Táº¡o mission tháº­t" /tmp/host-root.html
           cmp /tmp/host-root.html /tmp/host-app.html
           test -s /tmp/oauth-client.js
           test -s /tmp/web-client.js
@@ -87,3 +87,4 @@ jobs:
             echo "Private Factory implementation path leaked into public repository"
             exit 1
           fi
+

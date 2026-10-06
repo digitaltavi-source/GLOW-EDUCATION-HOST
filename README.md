@@ -2,10 +2,10 @@
 
 **Public AI host, staging workspace and declassification boundary for GLOW Education.**
 
-GLOW Education Host is the shareable/public half of a two-repository architecture:
+GLOW Education Host is the public half of a two-repository architecture:
 
 ```text
-AI host / browser
+ChatGPT / browser
       |
       v
 GLOW-EDUCATION-HOST (PUBLIC)
@@ -18,17 +18,26 @@ UI + MCP/OAuth + public contracts + declassified egress
 
 ## Why this repository is public
 
-This repository is designed to be inspectable and shareable as a portfolio-quality integration project. It demonstrates:
+This repository is intentionally simple and inspectable. It demonstrates the public integration surface of GLOW Education without publishing protected Factory internals:
 
 - typed public contracts;
 - MCP/OAuth host integration;
 - explicit `PUBLIC_DECLASSIFIED` vs `MODEL_SESSION_PRIVATE` boundaries;
 - fail-closed response validation;
-- one-domain combined deployment support without publishing protected Factory source;
+- one-domain combined deployment support;
 - responsive staging workspace;
-- automated regression and adversarial security tests.
+- automated regression, HTTP smoke and adversarial security tests.
 
 It intentionally does **not** contain protected Factory implementation, confidential prompts, private evidence, restricted release packages, secrets or proprietary runtime internals.
+
+## Repository branches
+
+The repository uses only two long-lived branches:
+
+- `main` — public operational/source-of-truth branch;
+- `sandbox` — backup and bounded experiment/integration branch before promotion to `main`.
+
+Short-lived repair or candidate branches are not retained after their commits are safely represented in `main`.
 
 ## Deployment modes
 
@@ -48,15 +57,9 @@ Use `GLOW_COMBINED_RUNTIME_MODULE` only in the private assembly/deployment envir
 
 ## Staging UI
 
-The public host ships a responsive browser workspace for:
+The public host ships a responsive browser workspace for staging access, mission start/status/result retrieval, and visible combined/standalone runtime state.
 
-- staging access;
-- Start Mission;
-- mission status;
-- result retrieval;
-- visible combined/standalone runtime state.
-
-The UI is an adapter surface only. It does not own Factory semantics or qualification state.
+The UI is an adapter surface only. It does not own Factory semantics, Canon, capability qualification or release authority.
 
 ## Security laws
 
@@ -72,9 +75,13 @@ See [SECURITY_BOUNDARY.md](SECURITY_BOUNDARY.md) and [docs/ARCHITECTURE.md](docs
 
 ## Current state
 
-`LIVE_DEMO_HOST_VERIFIED_NOT_PRODUCTION`
+`V2_SUCCESSOR_ASSEMBLY_NODE22_CI_VERIFIED_AWAITING_LIVE_REDEPLOY`
 
-The darkgrey Hostinger deployment has passed live combined-host and ChatGPT MCP work-loop acceptance for supervised demos. The browser surface remains a PUBLIC_DECLASSIFIED preview adapter; the full governed Factory work loop is exercised through the ChatGPT plugin/MCP path. This does not imply production qualification, independent qualification, reproduction across restart, or field verification.
+The public Host component remains compatible with the stable one-domain MCP/OAuth topology. A new GLOW Education V2 successor combined assembly has passed Node 22 integration CI, including exact component identity, public-host regression, the governed MCP work-loop regression, NORMAL/FAILURE/ADVERSARIAL/RECOVERY testing, full HTTP acceptance, private-implementation leak scanning and secret scanning.
+
+That new V2 successor runtime has **not yet been reverified live on the Hostinger deployment**. Earlier live evidence belongs to the prior deployed runtime identity and does not automatically transfer to the new candidate. A same-URL redeploy plus fresh `/system/identity` and controlled MCP mission acceptance is the next live gate.
+
+This public state does not imply production qualification, independent qualification, field verification or human release authorization.
 
 ## Local development
 
