@@ -1,4 +1,4 @@
-﻿name: host-ci
+name: host-ci
 
 on:
   push:
@@ -39,41 +39,7 @@ jobs:
           grep -q "Mission Control" dist/public/index.html
 
       - name: Runtime smoke from hidden parent path
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf .host-smoke
-          mkdir -p .host-smoke/public-host
-          cp -a dist package.json node_modules .host-smoke/public-host/
-          (
-            cd .host-smoke/public-host
-            PORT=3191 \
-            GLOW_ALLOWED_HOSTS=127.0.0.1,localhost \
-            GLOW_PROTECTED_SERVICE_URL=https://protected.example \
-            GLOW_PROTECTED_SERVICE_TOKEN=ci-placeholder-token \
-            GLOW_AUTH_MODE=staging_disabled \
-            node dist/src/server.js > /tmp/glow-host-smoke.log 2>&1 &
-            echo $! > /tmp/glow-host-smoke.pid
-          )
-          PID="$(cat /tmp/glow-host-smoke.pid)"
-          trap 'kill "$PID" 2>/dev/null || true' EXIT
-          for i in $(seq 1 20); do
-            if curl -fsS http://127.0.0.1:3191/healthz >/tmp/host-health.json; then break; fi
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:3191/ >/tmp/host-root.html
-          curl -fsS http://127.0.0.1:3191/app >/tmp/host-app.html
-          curl -fsS http://127.0.0.1:3191/oauth-client.js >/tmp/oauth-client.js
-          curl -fsS http://127.0.0.1:3191/web-client.js >/tmp/web-client.js
-          grep -q "Mission Control" /tmp/host-root.html
-          grep -q "Táº¡o mission tháº­t" /tmp/host-root.html
-          cmp /tmp/host-root.html /tmp/host-app.html
-          test -s /tmp/oauth-client.js
-          test -s /tmp/web-client.js
-          if grep -q "CONFIG_OAUTH_ISSUER_REQUIRED" /tmp/glow-host-smoke.log; then
-            cat /tmp/glow-host-smoke.log
-            exit 1
-          fi
+        run: node scripts/hidden-parent-smoke.mjs
 
       - name: Reject obvious secrets and private implementation paths
         shell: bash
