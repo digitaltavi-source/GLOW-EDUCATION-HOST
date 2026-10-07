@@ -109,8 +109,8 @@ function toolError(code: string) {
 function subjectFrom(ctx: { authInfo?: { scopes: string[]; extra?: Record<string, unknown> } }) {
   const authInfo = ctx.authInfo;
   const subject = authInfo?.extra?.["sub"];
-  if (typeof subject !== "string" || !subject) throw new Error("AUTH_REQUIRED");
-  if (!requiredScopes.every(scope=>authInfo.scopes.includes(scope))) throw new Error("SCOPE_REQUIRED");
+  if (typeof subject !== "string" || !subject.trim()) throw new Error("AUTH_REQUIRED");
+  if (!requiredScopes.every(scope=>(authInfo?.scopes ?? []).includes(scope))) throw new Error("SCOPE_REQUIRED");
   return subject;
 }
 
@@ -136,9 +136,7 @@ async function webSubject(req: { header(name: string): string | undefined }) {
   const bearer=match?.[1];
   if(!bearer) throw new Error("AUTH_REQUIRED");
   const info=await verifier.verifyAccessToken(bearer);
-  const subject=info.extra?.["sub"];
-  if(typeof subject!=="string" || !subject.trim()) throw new Error("AUTH_REQUIRED");
-  return subject;
+  return subjectFrom({authInfo:info});
 }
 
 async function invokeWeb(
@@ -535,7 +533,7 @@ app.post("/api/web/start", async (req,res) => {
     return res.json(await invokeWeb(req,"create_learning_experience",role,locale,input));
   } catch(error) {
     const code=error instanceof Error?error.message:"WEB_START_FAILED";
-    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+    return res.status(code==="AUTH_REQUIRED"?401:code==="SCOPE_REQUIRED"?403:400).json({error:code});
   }
 });
 
@@ -547,7 +545,7 @@ app.post("/api/web/status", async (req,res) => {
     return res.json(await invokeWeb(req,"get_status",role,locale,{mission_id}));
   } catch(error) {
     const code=error instanceof Error?error.message:"WEB_STATUS_FAILED";
-    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+    return res.status(code==="AUTH_REQUIRED"?401:code==="SCOPE_REQUIRED"?403:400).json({error:code});
   }
 });
 
@@ -568,7 +566,7 @@ app.post("/api/web/approval", async (req,res) => {
     return res.json(await invokeWeb(req,"approve_stage",role,locale,{mission_id,approval}));
   } catch(error) {
     const code=error instanceof Error?error.message:"WEB_APPROVAL_FAILED";
-    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+    return res.status(code==="AUTH_REQUIRED"?401:code==="SCOPE_REQUIRED"?403:400).json({error:code});
   }
 });
 
@@ -580,7 +578,7 @@ app.post("/api/web/delivery", async (req,res) => {
     return res.json(await invokeWeb(req,"get_delivery",role,locale,{mission_id}));
   } catch(error) {
     const code=error instanceof Error?error.message:"WEB_DELIVERY_FAILED";
-    return res.status(code==="AUTH_REQUIRED"?401:400).json({error:code});
+    return res.status(code==="AUTH_REQUIRED"?401:code==="SCOPE_REQUIRED"?403:400).json({error:code});
   }
 });
 
